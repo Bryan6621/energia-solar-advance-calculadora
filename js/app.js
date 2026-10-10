@@ -64,6 +64,11 @@
 
   function esMonetaria(unidad) { return unidad.indexOf("USD") === 0; }
 
+  function unidadEtiqueta(unidad) {
+    if (esMonetaria(unidad) && moneda.codigo !== "USD") { return unidad.replace("USD", moneda.codigo); }
+    return unidad;
+  }
+
   function formatearNumeroLocal(valor, decimales) {
     var s = valor.toFixed(decimales).replace(".", ",");
     var partes = s.split(",");
@@ -101,18 +106,26 @@
   function leerValores(tarjeta) {
     var valores = {};
     tarjeta.querySelectorAll("input[data-campo]").forEach(function (entrada) {
-      valores[entrada.dataset.campo] = leerEntrada(entrada);
+      var v = leerEntrada(entrada);
+      if (entrada.hasAttribute("data-monetario") && moneda.codigo !== "USD") { v = v / moneda.tasa; }
+      valores[entrada.dataset.campo] = v;
     });
     return valores;
   }
 
   function formulasDelModulo(id) { return FORMULAS.filter(function (f) { return f.modulo === id; }); }
 
+  function campoHTML(campo) {
+    var monetario = esMonetaria(campo.unidad);
+    var valor = monetario && moneda.codigo !== "USD" ? campo.defecto * moneda.tasa : campo.defecto;
+    return '<div class="campo"><label class="campo__etiqueta">' + campo.etiqueta +
+      ' <span class="campo__unidad" data-campo-unidad="' + campo.unidad + '">' + unidadEtiqueta(campo.unidad) + '</span></label>' +
+      '<input class="campo__entrada" type="number" step="any" data-campo="' + campo.clave + '"' +
+      (monetario ? ' data-monetario="1"' : "") + ' value="' + valor + '"></div>';
+  }
+
   function construirTarjeta(f) {
-    var campos = f.inputs.map(function (campo) {
-      return '<div class="campo"><label class="campo__etiqueta">' + campo.etiqueta + ' <span class="campo__unidad">' + campo.unidad + '</span></label>' +
-        '<input class="campo__entrada" type="number" step="any" data-campo="' + campo.clave + '" value="' + campo.defecto + '"></div>';
-    }).join("");
+    var campos = f.inputs.map(campoHTML).join("");
     return '<article class="tarjeta" data-fid="' + f.id + '">' +
       '<div class="tarjeta__cabecera"><span class="tarjeta__indice">' + f.id + '</span><span class="tarjeta__nombre">' + f.nombre + '</span>' +
       '<div class="tarjeta__util"><button class="util util-deriv" aria-label="Ver derivación">=</button>' +
@@ -121,7 +134,7 @@
       '<div class="tarjeta__formula">' + f.expresion + '</div>' + campos +
       '<div class="resultado"><div><div class="resultado__etiqueta">Resultado</div>' +
       '<div class="resultado__valor" data-resultado>—</div></div>' +
-      '<div class="resultado__unidad" data-unidad>' + f.unidad + '</div></div>' +
+      '<div class="resultado__unidad" data-unidad>' + unidadEtiqueta(f.unidad) + '</div></div>' +
       '<div class="tarjeta__derivacion" data-derivacion></div>' +
       (f.nota ? '<div class="nota">' + f.nota + '</div>' : "") +
       (f.orientativo ? '<span class="nota--orientativo">orientativo — verificar en PVGIS</span>' : "") +
@@ -129,10 +142,7 @@
   }
 
   function construirTarjetaPro(h) {
-    var campos = h.inputs.map(function (campo) {
-      return '<div class="campo"><label class="campo__etiqueta">' + campo.etiqueta + ' <span class="campo__unidad">' + campo.unidad + '</span></label>' +
-        '<input class="campo__entrada" type="number" step="any" data-campo="' + campo.clave + '" value="' + campo.defecto + '"></div>';
-    }).join("");
+    var campos = h.inputs.map(campoHTML).join("");
     return '<article class="tarjeta" data-pid="' + h.id + '">' +
       '<div class="tarjeta__cabecera"><span class="tarjeta__indice">P</span>' +
       '<span class="tarjeta__nombre">' + h.nombre + '</span>' +
@@ -141,7 +151,7 @@
       '<div class="tarjeta__formula">' + h.expresion + '</div>' + campos +
       '<div class="resultado"><div><div class="resultado__etiqueta">Resultado</div>' +
       '<div class="resultado__valor" data-resultado>—</div></div>' +
-      '<div class="resultado__unidad" data-unidad>' + h.unidad + '</div></div>' +
+      '<div class="resultado__unidad" data-unidad>' + unidadEtiqueta(h.unidad) + '</div></div>' +
       '</article>';
   }
 
@@ -243,7 +253,11 @@
       var tarjeta = document.querySelector('.tarjeta[data-fid="' + fid + '"]');
       if (!tarjeta) { return; }
       tarjeta.querySelectorAll("input[data-campo]").forEach(function (entrada) {
-        if (valores[entrada.dataset.campo] !== undefined) { entrada.value = valores[entrada.dataset.campo]; }
+        if (valores[entrada.dataset.campo] !== undefined) {
+          var v = valores[entrada.dataset.campo];
+          if (entrada.hasAttribute("data-monetario") && moneda.codigo !== "USD") { v = v * moneda.tasa; }
+          entrada.value = v;
+        }
       });
       recalcular(tarjeta);
     });
@@ -467,20 +481,42 @@
       var etiqueta = m.codigo === "USD" && m.pais !== "Estados Unidos (referencia)" ? m.pais + " · USD" : m.pais + " · " + m.codigo;
       return '<option value="' + i + '">' + etiqueta + '</option>';
     }).join("");
-    function aplicarMoneda() {
+    // Restaurar la moneda recordada
+    var guardado = null;
+    try { guardado = localStorage.getItem("advance:moneda"); } catch (e) {}
+    if (guardado !== null && guardado !== undefined) { select.value = guardado; }
+
+    function convertirValoresMonetarios(anteriorTasa, nuevaTasa) {
+      document.querySelectorAll("input[data-monetario]").forEach(function (entrada) {
+        var v = parseFloat(entrada.value);
+        if (!isNaN(v)) { entrada.value = v / anteriorTasa * nuevaTasa; }
+      });
+    }
+    function actualizarEtiquetasMonetarias() {
+      document.querySelectorAll("[data-campo-unidad]").forEach(function (span) {
+        span.textContent = unidadEtiqueta(span.getAttribute("data-campo-unidad"));
+      });
+    }
+    function aplicarMoneda(convertir) {
+      var anterior = moneda;
       moneda = MONEDAS[parseInt(select.value, 10)] || MONEDAS[0];
       var esDolar = moneda.codigo === "USD";
       tasa.hidden = esDolar;
       if (!esDolar) { tasa.value = moneda.tasa; }
+      if (convertir) { convertirValoresMonetarios(anterior.tasa, moneda.tasa); }
+      actualizarEtiquetasMonetarias();
       recalcularTodo();
     }
-    select.addEventListener("change", aplicarMoneda);
+    select.addEventListener("change", function () {
+      aplicarMoneda(true);
+      try { localStorage.setItem("advance:moneda", select.value); } catch (e) {}
+    });
     tasa.addEventListener("input", function () {
       var v = parseFloat(tasa.value);
       if (!isNaN(v) && v > 0) { moneda.tasa = v; }
       recalcularTodo();
     });
-    aplicarMoneda();
+    aplicarMoneda(false);
   }
 
   function montarTabbar() {
