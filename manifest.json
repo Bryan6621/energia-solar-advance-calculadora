@@ -1,0 +1,17 @@
+{
+  "name": "Calculadora Solar Advance",
+  "short_name": "Solar Advance",
+  "description": "Calculadora del libro «Energía Solar Advance»: las 17 fórmulas del capítulo 31 con verificación contra los casos Torres y Los Alisos.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E2B47",
+  "theme_color": "#12375B",
+  "lang": "es",
+  "icons": [
+    { "src": "iconos/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "iconos/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "iconos/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

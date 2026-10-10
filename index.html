@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Calculadora Solar Advance</title>
+  <meta name="theme-color" content="#12375B">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./iconos/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="./iconos/favicon-32.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Solar Advance">
+  <link rel="stylesheet" href="./css/app.css">
+</head>
+<body>
+  <header class="cabecera">
+    <div class="cabecera__logo"><img src="./logo_advance.png" alt="Logo Solar Advance"></div>
+    <div>
+      <div class="cabecera__titulo">Calculadora Solar Advance</div>
+      <div class="cabecera__subtitulo">Las 17 fórmulas del capítulo 31 · verificadas contra el libro</div>
+    </div>
+  </header>
+
+  <main class="contenido" id="contenido"></main>
+
+  <nav class="tabbar" id="tabbar" aria-label="Módulos de la calculadora"></nav>
+
+  <!-- Superposición: instalación en Android (botón obligatorio) -->
+  <div class="superposicion" id="superposicion-instalar">
+    <div class="panel">
+      <div class="panel__icono">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v12"/><path d="M6 9l6 6 6-6"/>
+          <path d="M4 20h16"/>
+        </svg>
+      </div>
+      <div class="panel__titulo">Instala la calculadora</div>
+      <div class="panel__texto">Para usar la app, instálala en tu teléfono. Quedará en tu pantalla de inicio y funcionará sin conexión.</div>
+      <button class="boton" id="boton-instalar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v12"/><path d="M6 9l6 6 6-6"/><path d="M4 20h16"/>
+        </svg>
+        Instalar app
+      </button>
+      <button class="boton boton--secundario" id="boton-continuar-web">Continuar en el navegador</button>
+    </div>
+  </div>
+
+  <!-- Superposición: instrucciones de instalación en iOS -->
+  <div class="superposicion" id="superposicion-ios">
+    <div class="panel">
+      <div class="panel__icono">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="6" y="3" width="12" height="18" rx="2"/><path d="M10 18h4"/>
+        </svg>
+      </div>
+      <div class="panel__titulo">Instala la calculadora en tu iPhone</div>
+      <div class="panel__texto">En iOS la app se agrega a la pantalla de inicio desde Safari. Sigue estos pasos:</div>
+      <div class="paso"><span class="paso__num">1</span><div class="paso__cuerpo">Abre esta página en <strong>Safari</strong> (no en otra app).</div></div>
+      <div class="paso"><span class="paso__num">2</span><div class="paso__cuerpo">Toca el botón <strong>Compartir</strong> (el cuadrado con flecha hacia arriba).</div></div>
+      <div class="paso"><span class="paso__num">3</span><div class="paso__cuerpo">Elige <strong>«Agregar a pantalla de inicio»</strong>.</div></div>
+      <div class="paso"><span class="paso__num">4</span><div class="paso__cuerpo">Toca <strong>«Agregar»</strong>. La app queda instalada y funciona sin conexión.</div></div>
+      <button class="boton boton--secundario" id="boton-cerrar-ios">Entendido</button>
+    </div>
+  </div>
+
+  <script src="./js/formulas.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
