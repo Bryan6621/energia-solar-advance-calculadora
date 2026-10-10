@@ -61,6 +61,36 @@ body {
 .cabecera__logo img { width: 100%; height: 100%; object-fit: contain; }
 .cabecera__titulo { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
 .cabecera__subtitulo { font-size: 10.5px; color: #B9C9D8; margin-top: 1px; }
+.cabecera__texto { flex: 1; min-width: 0; }
+.cabecera__controles { flex: none; display: flex; align-items: center; gap: 8px; }
+.moneda {
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #F4F7FA;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 10px;
+  padding: 7px 26px 7px 10px;
+  max-width: 148px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23C2A042' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+}
+.moneda option { color: var(--tinta); background: #FFFFFF; }
+.moneda-tasa {
+  width: 82px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: #F4F7FA;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 10px;
+  padding: 7px 8px;
+}
 
 /* ------------------------------------------------------------- contenido */
 .contenido {

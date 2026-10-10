@@ -29,6 +29,65 @@
 
   var TOLERANCIAS = { 6: 0, 4: 1, 8: 0.1, 9: 0.1, 10: 0.002, 12: 0.1, 14: 0.1, 13: 0.03 };
 
+  /* ------------------------------------------------------------- monedas
+     Países de Latinoamérica y España. La tasa es ORIENTATIVA (referencia
+     aproximada): el usuario puede editarla en el encabezado. Los resultados
+     monetarios se muestran convertidos; las fórmulas siguen calculando en
+     USD (la moneda del libro) para no romper la verificación. */
+  var MONEDAS = [
+    { pais: "Estados Unidos (referencia)", codigo: "USD", simbolo: "$", tasa: 1 },
+    { pais: "México", codigo: "MXN", simbolo: "$", tasa: 17.5 },
+    { pais: "Guatemala", codigo: "GTQ", simbolo: "Q", tasa: 7.75 },
+    { pais: "El Salvador", codigo: "USD", simbolo: "$", tasa: 1 },
+    { pais: "Honduras", codigo: "HNL", simbolo: "L", tasa: 24.7 },
+    { pais: "Nicaragua", codigo: "NIO", simbolo: "C$", tasa: 36.7 },
+    { pais: "Costa Rica", codigo: "CRC", simbolo: "₡", tasa: 520 },
+    { pais: "Panamá", codigo: "USD", simbolo: "$", tasa: 1 },
+    { pais: "Cuba", codigo: "CUP", simbolo: "$", tasa: 24 },
+    { pais: "República Dominicana", codigo: "DOP", simbolo: "RD$", tasa: 59 },
+    { pais: "Puerto Rico", codigo: "USD", simbolo: "$", tasa: 1 },
+    { pais: "Colombia", codigo: "COP", simbolo: "$", tasa: 4100 },
+    { pais: "Venezuela", codigo: "VES", simbolo: "Bs", tasa: 60 },
+    { pais: "Ecuador", codigo: "USD", simbolo: "$", tasa: 1 },
+    { pais: "Perú", codigo: "PEN", simbolo: "S/", tasa: 3.75 },
+    { pais: "Bolivia", codigo: "BOB", simbolo: "Bs", tasa: 6.9 },
+    { pais: "Chile", codigo: "CLP", simbolo: "$", tasa: 950 },
+    { pais: "Paraguay", codigo: "PYG", simbolo: "₲", tasa: 7500 },
+    { pais: "Uruguay", codigo: "UYU", simbolo: "$U", tasa: 42 },
+    { pais: "Argentina", codigo: "ARS", simbolo: "$", tasa: 1000 },
+    { pais: "Brasil", codigo: "BRL", simbolo: "R$", tasa: 5.4 },
+    { pais: "España", codigo: "EUR", simbolo: "€", tasa: 0.92 }
+  ];
+
+  var moneda = MONEDAS[0];   // USD por defecto (moneda del libro)
+
+  function esMonetaria(f) {
+    return f.unidad.indexOf("USD") === 0;
+  }
+
+  function formatearNumeroLocal(valor, decimales) {
+    var s = valor.toFixed(decimales).replace(".", ",");
+    var partes = s.split(",");
+    partes[0] = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return partes.length > 1 ? partes[0] + "," + partes[1] : partes[0];
+  }
+
+  function formatearResultado(f, valor) {
+    if (esMonetaria(f) && moneda.codigo !== "USD") {
+      var convertido = valor * moneda.tasa;
+      var decimales = moneda.tasa >= 100 ? 0 : 2;
+      return moneda.simbolo + " " + formatearNumeroLocal(convertido, decimales);
+    }
+    return f.formato(valor);
+  }
+
+  function unidadMostrada(f) {
+    if (esMonetaria(f) && moneda.codigo !== "USD") {
+      return f.unidad.replace("USD", moneda.codigo);
+    }
+    return f.unidad;
+  }
+
   /* ------------------------------------------------------------- utilidades */
   function leerEntrada(el) {
     var v = parseFloat(el.value);
@@ -59,7 +118,7 @@
       campos +
       '<div class="resultado"><div><div class="resultado__etiqueta">Resultado</div>' +
       '<div class="resultado__valor" data-resultado>' + "—" + '</div></div>' +
-      '<div class="resultado__unidad">' + f.unidad + '</div></div>' +
+      '<div class="resultado__unidad" data-unidad>' + f.unidad + '</div></div>' +
       (f.nota ? '<div class="nota">' + f.nota + '</div>' : "") +
       (f.orientativo ? '<span class="nota--orientativo">orientativo — verificar en PVGIS</span>' : "") +
       '</article>';
@@ -76,7 +135,7 @@
   function construirVistaVerificacion() {
     return '<section class="vista" data-modulo="verificacion">' +
       '<h2 class="vista__titulo">Modo verificación</h2>' +
-      '<p class="vista__intro">Carga el caso del libro y la app devuelve los mismos números: la calculadora como examen y como vendedor silencioso.</p>' +
+      '<p class="vista__intro">Carga el caso del libro y la app devuelve los mismos números: la calculadora como examen y como vendedor silencioso. La comparación se hace en USD, la moneda del libro.</p>' +
       '<div class="presets">' +
       '<button class="preset" data-preset="torres">Caso Torres (on-grid)</button>' +
       '<button class="preset" data-preset="alisos">Caso Los Alisos (isla)</button>' +
@@ -119,7 +178,9 @@
     });
     var resultado = f.calculo(valores);
     var el = tarjeta.querySelector("[data-resultado]");
-    el.textContent = isFinite(resultado) ? f.formato(resultado) : "—";
+    el.textContent = isFinite(resultado) ? formatearResultado(f, resultado) : "—";
+    var unidadEl = tarjeta.querySelector("[data-unidad]");
+    if (unidadEl) { unidadEl.textContent = unidadMostrada(f); }
   }
 
   /* ------------------------------------------------------------- verificación */
@@ -190,9 +251,34 @@
   });
 
   /* ------------------------------------------------------------- arranque */
+  function montarSelectorMoneda() {
+    var select = document.getElementById("moneda-select");
+    var tasa = document.getElementById("moneda-tasa");
+    select.innerHTML = MONEDAS.map(function (m, i) {
+      var etiqueta = m.codigo === "USD" && m.pais !== "Estados Unidos (referencia)"
+        ? m.pais + " · USD" : m.pais + " · " + m.codigo;
+      return '<option value="' + i + '">' + etiqueta + '</option>';
+    }).join("");
+    function aplicarMoneda() {
+      moneda = MONEDAS[parseInt(select.value, 10)] || MONEDAS[0];
+      var esDolar = moneda.codigo === "USD";
+      tasa.hidden = esDolar;
+      if (!esDolar) { tasa.value = moneda.tasa; }
+      document.querySelectorAll(".tarjeta").forEach(function (tarjeta) { recalcular(tarjeta); });
+    }
+    select.addEventListener("change", aplicarMoneda);
+    tasa.addEventListener("input", function () {
+      var v = parseFloat(tasa.value);
+      if (!isNaN(v) && v > 0) { moneda.tasa = v; }
+      document.querySelectorAll(".tarjeta").forEach(function (tarjeta) { recalcular(tarjeta); });
+    });
+    aplicarMoneda();
+  }
+
   function iniciar() {
     montarInterfaz();
     mostrarVista(1);
+    montarSelectorMoneda();
 
     document.querySelectorAll(".tab").forEach(function (t) {
       t.addEventListener("click", function () { mostrarVista(t.dataset.tab); });

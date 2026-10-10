@@ -16,9 +16,14 @@
 <body>
   <header class="cabecera">
     <div class="cabecera__logo"><img src="./logo_advance.png" alt="Logo Solar Advance"></div>
-    <div>
+    <div class="cabecera__texto">
       <div class="cabecera__titulo">Calculadora Solar Advance</div>
       <div class="cabecera__subtitulo">Las 17 fórmulas del capítulo 31 · verificadas contra el libro</div>
+    </div>
+    <div class="cabecera__controles">
+      <select id="moneda-select" class="moneda" aria-label="Seleccionar país y moneda"></select>
+      <input id="moneda-tasa" class="moneda-tasa" type="number" step="any" inputmode="decimal"
+             title="Tipo de cambio orientativo (unidades de moneda local por USD)" hidden>
     </div>
   </header>
 
