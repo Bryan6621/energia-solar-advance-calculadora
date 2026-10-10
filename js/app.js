@@ -339,6 +339,7 @@
     montarTabbar();
     montarSelectorMoneda();
     enrutar();
+    document.getElementById("boton-casa").addEventListener("click", function () { enrutar("#/"); });
     document.getElementById("boton-instalar").addEventListener("click", function () {
       if (promptInstalacion) {
         promptInstalacion.prompt();
