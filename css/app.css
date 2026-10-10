@@ -612,6 +612,11 @@ body.oscuro .tarjeta__derivacion { background: rgba(0, 0, 0, 0.25); border-color
 .ubicacion { margin-bottom: 14px; }
 .ubicacion .campo__entrada { font-size: 13.5px; }
 
+/* ------------------------------------------------------------- simulador */
+.sim-leyenda { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
+.sim-leyenda__item { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--tinta-suave); }
+.sim-leyenda__punto { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
 /* ------------------------------------------------------------- botón de modo oscuro */
 .boton-tema {
   flex: none;

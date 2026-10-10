@@ -85,6 +85,14 @@
     return unidad;
   }
 
+  window.formatearMonedaDetalle = function (usd) {
+    if (moneda.codigo !== "USD") {
+      var v = usd * moneda.tasa;
+      return moneda.simbolo + " " + formatearNumeroLocal(v, moneda.tasa >= 100 ? 0 : 2);
+    }
+    return "$ " + usd.toFixed(2);
+  };
+
   function leerEntrada(el) {
     var v = parseFloat(el.value);
     return isNaN(v) ? 0 : v;
@@ -304,6 +312,7 @@
     });
     cablearUtilidades();
     montarUbicacion();
+    if (window.Almacen) { montarProyectos(); }
   }
 
   function mostrarPro() {
@@ -311,7 +320,19 @@
     contenido.innerHTML = botonVolver() +
       '<h2 class="vista__titulo">Advance · Pro</h2>' +
       '<p class="vista__intro">Herramientas profesionales. Toca el signo «?» de cada una para saber para qué sirve.</p>' +
+      '<div class="hub">' +
+      '<div class="hub__tarjeta" data-venta="asesor"><div class="hub__icono">' + icono("certificado") + '</div>' +
+      '<div><div class="hub__titulo">Asesor de decisión</div><div class="hub__texto">Responde tres preguntas y recibe la recomendación del libro.</div></div></div>' +
+      '<div class="hub__tarjeta" data-venta="simulador"><div class="hub__icono hub__icono--pro">' + icono("economia") + '</div>' +
+      '<div><div class="hub__titulo">Simulador antes / después</div><div class="hub__texto">Curva año a año con el punto exacto de payback.</div></div></div>' +
+      '<div class="hub__tarjeta" data-venta="detective"><div class="hub__icono hub__icono--pro">' + icono("factura") + '</div>' +
+      '<div><div class="hub__titulo">Detective de facturas</div><div class="hub__texto">Reconstruye las 5 zonas y detecta anomalías en tu factura.</div></div></div>' +
+      '</div>' +
+      '<p class="vista__intro" style="margin-top:14px">Herramientas de cálculo:</p>' +
       HERRAMIENTAS.map(construirTarjetaPro).join("");
+    contenido.querySelectorAll("[data-venta]").forEach(function (t) {
+      t.addEventListener("click", function () { enrutar("#/" + t.dataset.venta); });
+    });
     document.getElementById("boton-volver").addEventListener("click", function () { enrutar("#/"); });
     contenido.querySelectorAll(".tarjeta").forEach(function (tarjeta) {
       tarjeta.querySelectorAll("input[data-campo]").forEach(function (entrada) {
@@ -352,6 +373,49 @@
     });
   }
 
+  function montarProyectos() {
+    var bar = document.createElement("div");
+    bar.className = "tarjeta";
+    bar.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;align-items:center";
+    bar.innerHTML =
+      '<button class="boton" id="proy-guardar" style="flex:1;min-width:120px">Guardar proyecto</button>' +
+      '<button class="boton boton--secundario" id="proy-abrir" style="flex:1;min-width:120px">Abrir</button>' +
+      '<div id="proy-lista" style="width:100%"></div>';
+    contenido.insertBefore(bar, contenido.firstChild);
+    document.getElementById("proy-guardar").addEventListener("click", function () {
+      var nombre = window.prompt("Nombre del proyecto:");
+      if (!nombre) { return; }
+      window.Almacen.guardar(nombre, window.Almacen.snapshot()).then(function () {
+        window.alert("Proyecto guardado.");
+      }).catch(function (e) { window.alert("Error: " + e); });
+    });
+    document.getElementById("proy-abrir").addEventListener("click", function () {
+      var lista = document.getElementById("proy-lista");
+      if (lista.childElementCount) { lista.innerHTML = ""; return; }
+      window.Almacen.listar().then(function (proyectos) {
+        if (!proyectos.length) { lista.innerHTML = '<p class="nota">No hay proyectos guardados.</p>'; return; }
+        lista.innerHTML = proyectos.map(function (p) {
+          return '<div class="fila-verificacion"><span class="fila-verificacion__concepto">' + p.nombre + '</span>' +
+            '<span><button class="boton boton--secundario" data-cargar="' + p.id + '">abrir</button> ' +
+            '<button class="boton boton--secundario" data-borrar="' + p.id + '">borrar</button></span></div>';
+        }).join("");
+        lista.querySelectorAll("[data-cargar]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            var p = proyectos.find(function (x) { return String(x.id) === b.dataset.cargar; });
+            if (p) { window.Almacen.restaurar(p.datos); recalcularTodo(); lista.innerHTML = ""; }
+          });
+        });
+        lista.querySelectorAll("[data-borrar]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            window.Almacen.borrar(parseInt(b.dataset.borrar, 10)).then(function () {
+              b.closest(".fila-verificacion").remove();
+            });
+          });
+        });
+      });
+    });
+  }
+
   function mostrarCertificado() {
     tabbar.style.display = "none";
     contenido.innerHTML = "";
@@ -365,6 +429,22 @@
     if (window.mostrarVerificacion) { window.mostrarVerificacion(contenido); }
   }
 
+  function mostrarAsesor() {
+    tabbar.style.display = "none";
+    contenido.innerHTML = "";
+    if (window.Venta) { window.Venta.asesor(contenido, function () { enrutar("#/pro"); }); }
+  }
+  function mostrarSimulador() {
+    tabbar.style.display = "none";
+    contenido.innerHTML = "";
+    if (window.Venta) { window.Venta.simulador(contenido, function () { enrutar("#/pro"); }); }
+  }
+  function mostrarDetective() {
+    tabbar.style.display = "none";
+    contenido.innerHTML = "";
+    if (window.Venta) { window.Venta.detective(contenido, function () { enrutar("#/pro"); }); }
+  }
+
   window.mostrarHub = function () { enrutar("#/"); };
 
   function enrutar(ruta) {
@@ -373,6 +453,9 @@
     else if (hash.indexOf("#/educativo") === 0) { mostrarEducativo(); }
     else if (hash.indexOf("#/pro") === 0) { mostrarPro(); }
     else if (hash.indexOf("#/certificado") === 0) { mostrarCertificado(); }
+    else if (hash.indexOf("#/asesor") === 0) { mostrarAsesor(); }
+    else if (hash.indexOf("#/simulador") === 0) { mostrarSimulador(); }
+    else if (hash.indexOf("#/detective") === 0) { mostrarDetective(); }
     else { mostrarHub(); }
   }
   window.addEventListener("hashchange", function () { enrutar(); });
