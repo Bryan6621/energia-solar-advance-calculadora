@@ -80,6 +80,22 @@
     </div>
   </div>
 
+  <!-- Modal: guardar proyecto (reemplaza al diálogo nativo del navegador) -->
+  <div class="superposicion" id="modal-proyecto">
+    <div class="panel">
+      <div class="panel__icono">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 6a1 1 0 0 1 1-1h5l2 2h8a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>
+        </svg>
+      </div>
+      <div class="panel__titulo">Guardar proyecto</div>
+      <div class="panel__texto">Guarda una copia de todos los valores que has ingresado en este dispositivo. No sale de tu teléfono: funciona sin cuenta y sin nube.</div>
+      <input class="campo__entrada modal__entrada" id="proyecto-nombre" type="text" placeholder="Nombre del proyecto" autocomplete="off">
+      <button class="boton modal__boton" id="proyecto-confirmar">Guardar</button>
+      <button class="boton boton--secundario modal__boton" id="proyecto-cancelar">Cancelar</button>
+    </div>
+  </div>
+
   <script src="./js/formulas.js"></script>
   <script src="./js/herramientas-pro.js"></script>
   <script src="./js/localizacion.js"></script>

@@ -103,6 +103,18 @@
     return isNaN(v) ? 0 : v;
   }
 
+  function toast(mensaje) {
+    var t = document.createElement("div");
+    t.className = "toast";
+    t.textContent = mensaje;
+    document.body.appendChild(t);
+    setTimeout(function () { t.classList.add("visible"); }, 10);
+    setTimeout(function () {
+      t.classList.remove("visible");
+      setTimeout(function () { t.remove(); }, 300);
+    }, 2400);
+  }
+
   function leerValores(tarjeta) {
     var valores = {};
     tarjeta.querySelectorAll("input[data-campo]").forEach(function (entrada) {
@@ -387,22 +399,55 @@
     });
   }
 
+  var modalProyectoListo = false;
+
+  function abrirModalProyecto() {
+    if (!modalProyectoListo) {
+      var modal = document.getElementById("modal-proyecto");
+      var nombreInput = document.getElementById("proyecto-nombre");
+      document.getElementById("proyecto-cancelar").addEventListener("click", function () {
+        modal.classList.remove("visible");
+      });
+      document.getElementById("proyecto-nombre").addEventListener("keydown", function (e) {
+        if (e.key === "Enter") { document.getElementById("proyecto-confirmar").click(); }
+      });
+      document.getElementById("proyecto-confirmar").addEventListener("click", function () {
+        var nombre = nombreInput.value.trim();
+        if (!nombre) { nombreInput.focus(); return; }
+        window.Almacen.guardar(nombre, window.Almacen.snapshot()).then(function () {
+          modal.classList.remove("visible");
+          toast("Proyecto guardado.");
+        }).catch(function () { toast("No se pudo guardar el proyecto."); });
+      });
+      modalProyectoListo = true;
+    }
+    var nombreInput = document.getElementById("proyecto-nombre");
+    nombreInput.value = "";
+    document.getElementById("modal-proyecto").classList.add("visible");
+    setTimeout(function () { nombreInput.focus(); }, 60);
+  }
+
   function montarProyectos() {
     var bar = document.createElement("div");
     bar.className = "tarjeta";
     bar.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;align-items:center";
     bar.innerHTML =
+      '<div class="tarjeta__cabecera" style="width:100%"><span class="tarjeta__indice">P</span>' +
+      '<span class="tarjeta__nombre">Tus proyectos</span>' +
+      '<button class="tarjeta__ayuda" id="proy-ayuda" type="button" aria-label="Qué es guardar proyecto">?</button></div>' +
+      '<div class="tarjeta__explicacion" id="proy-explicacion">' +
+      'Guarda una instantánea de todos los valores que has ingresado (fórmulas y herramientas) en este dispositivo. ' +
+      'Así no los pierdes al cerrar la app y puedes retomarlos después con «Abrir». No sale de tu teléfono: funciona sin cuenta y sin nube.</div>' +
       '<button class="boton" id="proy-guardar" style="flex:1;min-width:120px">Guardar proyecto</button>' +
       '<button class="boton boton--secundario" id="proy-abrir" style="flex:1;min-width:120px">Abrir</button>' +
       '<div id="proy-lista" style="width:100%"></div>';
     contenido.insertBefore(bar, contenido.firstChild);
-    document.getElementById("proy-guardar").addEventListener("click", function () {
-      var nombre = window.prompt("Nombre del proyecto:");
-      if (!nombre) { return; }
-      window.Almacen.guardar(nombre, window.Almacen.snapshot()).then(function () {
-        window.alert("Proyecto guardado.");
-      }).catch(function (e) { window.alert("Error: " + e); });
+
+    document.getElementById("proy-ayuda").addEventListener("click", function () {
+      document.getElementById("proy-explicacion").classList.toggle("visible");
     });
+    document.getElementById("proy-guardar").addEventListener("click", abrirModalProyecto);
+
     document.getElementById("proy-abrir").addEventListener("click", function () {
       var lista = document.getElementById("proy-lista");
       if (lista.childElementCount) { lista.innerHTML = ""; return; }
