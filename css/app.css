@@ -62,7 +62,13 @@ body {
 .cabecera__titulo { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
 .cabecera__subtitulo { font-size: 10.5px; color: #B9C9D8; margin-top: 1px; }
 .cabecera__texto { flex: 1; min-width: 0; }
-.cabecera__controles { flex: none; display: flex; align-items: center; gap: 8px; }
+.cabecera__controles {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
 .moneda {
   appearance: none;
   -webkit-appearance: none;
