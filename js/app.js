@@ -520,16 +520,60 @@
   window.addEventListener("hashchange", function () { enrutar(); });
 
   function montarSelectorMoneda() {
-    var select = document.getElementById("moneda-select");
+    var boton = document.getElementById("moneda-select");
+    var banderaEl = document.getElementById("moneda-bandera");
+    var textoEl = document.getElementById("moneda-texto");
+    var lista = document.getElementById("moneda-lista");
     var tasa = document.getElementById("moneda-tasa");
-    select.innerHTML = MONEDAS.map(function (m, i) {
-      var etiqueta = m.codigo === "USD" && m.pais !== "Estados Unidos (referencia)" ? m.pais + " · USD" : m.pais + " · " + m.codigo;
-      return '<option value="' + i + '">' + etiqueta + '</option>';
+    var indiceMoneda = 0;
+
+    function etiquetaMoneda(m) {
+      return m.codigo === "USD" && m.pais !== "Estados Unidos (referencia)" ? m.pais + " · USD" : m.pais + " · " + m.codigo;
+    }
+
+    lista.innerHTML = MONEDAS.map(function (m, i) {
+      return '<button class="moneda__opcion" role="option" data-indice="' + i + '">' +
+        '<span class="moneda__bandera">' + (window.banderaSVG ? window.banderaSVG(m.pais) : "") + '</span>' +
+        '<span class="moneda__opcion__texto">' + etiquetaMoneda(m) + '</span></button>';
     }).join("");
+
     // Restaurar la moneda recordada
     var guardado = null;
     try { guardado = localStorage.getItem("advance:moneda"); } catch (e) {}
-    if (guardado !== null && guardado !== undefined) { select.value = guardado; }
+    if (guardado !== null && guardado !== undefined) {
+      var g = parseInt(guardado, 10);
+      if (!isNaN(g) && g >= 0 && g < MONEDAS.length) { indiceMoneda = g; }
+    }
+
+    function pintarBoton() {
+      var m = MONEDAS[indiceMoneda] || MONEDAS[0];
+      banderaEl.innerHTML = window.banderaSVG ? window.banderaSVG(m.pais) : "";
+      textoEl.textContent = etiquetaMoneda(m);
+      lista.querySelectorAll(".moneda__opcion").forEach(function (o) {
+        o.classList.toggle("activo", o.dataset.indice === String(indiceMoneda));
+      });
+    }
+
+    function abrirLista() { lista.classList.add("visible"); boton.setAttribute("aria-expanded", "true"); }
+    function cerrarLista() { lista.classList.remove("visible"); boton.setAttribute("aria-expanded", "false"); }
+
+    boton.addEventListener("click", function () {
+      if (lista.classList.contains("visible")) { cerrarLista(); } else { abrirLista(); }
+    });
+    lista.querySelectorAll(".moneda__opcion").forEach(function (opcion) {
+      opcion.addEventListener("click", function () {
+        var nuevo = parseInt(opcion.dataset.indice, 10);
+        var convertir = nuevo !== indiceMoneda;
+        indiceMoneda = nuevo;
+        aplicarMoneda(convertir);
+        cerrarLista();
+        pintarBoton();
+        try { localStorage.setItem("advance:moneda", String(indiceMoneda)); } catch (e) {}
+      });
+    });
+    document.addEventListener("click", function (e) {
+      if (!document.getElementById("moneda-selector").contains(e.target)) { cerrarLista(); }
+    });
 
     function convertirValoresMonetarios(anteriorTasa, nuevaTasa) {
       document.querySelectorAll("input[data-monetario]").forEach(function (entrada) {
@@ -544,7 +588,7 @@
     }
     function aplicarMoneda(convertir) {
       var anterior = moneda;
-      moneda = MONEDAS[parseInt(select.value, 10)] || MONEDAS[0];
+      moneda = MONEDAS[indiceMoneda] || MONEDAS[0];
       var esDolar = moneda.codigo === "USD";
       tasa.hidden = esDolar;
       if (!esDolar) { tasa.value = moneda.tasa; }
@@ -552,16 +596,15 @@
       actualizarEtiquetasMonetarias();
       recalcularTodo();
     }
-    select.addEventListener("change", function () {
-      aplicarMoneda(true);
-      try { localStorage.setItem("advance:moneda", select.value); } catch (e) {}
-    });
+
     tasa.addEventListener("input", function () {
       var v = parseFloat(tasa.value);
       if (!isNaN(v) && v > 0) { moneda.tasa = v; }
       recalcularTodo();
     });
+
     aplicarMoneda(false);
+    pintarBoton();
   }
 
   function montarTabbar() {

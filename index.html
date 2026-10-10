@@ -30,7 +30,14 @@
         </button>
       </div>
       <div class="cabecera__controles">
-        <select id="moneda-select" class="moneda" aria-label="Seleccionar país y moneda"></select>
+        <div class="moneda" id="moneda-selector">
+          <button class="moneda__boton" id="moneda-select" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Seleccionar país y moneda">
+            <span class="moneda__bandera" id="moneda-bandera"></span>
+            <span class="moneda__texto" id="moneda-texto">Estados Unidos · USD</span>
+            <svg class="moneda__flecha" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+          <div class="moneda__lista" id="moneda-lista" role="listbox"></div>
+        </div>
         <input id="moneda-tasa" class="moneda-tasa" type="number" step="any" inputmode="decimal"
                title="Tipo de cambio orientativo (unidades de moneda local por USD)" hidden>
       </div>
@@ -99,6 +106,7 @@
   <script src="./js/formulas.js"></script>
   <script src="./js/herramientas-pro.js"></script>
   <script src="./js/localizacion.js"></script>
+  <script src="./js/banderas.js"></script>
   <script src="./js/almacen.js"></script>
   <script src="./js/venta.js"></script>
   <script src="./js/examen.js"></script>

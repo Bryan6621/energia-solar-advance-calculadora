@@ -89,8 +89,13 @@ body {
   gap: 6px;
 }
 .moneda {
-  appearance: none;
-  -webkit-appearance: none;
+  position: relative;
+  flex: none;
+}
+.moneda__boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
@@ -98,13 +103,58 @@ body {
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 10px;
-  padding: 7px 26px 7px 10px;
-  max-width: 148px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23C2A042' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 9px center;
+  padding: 7px 10px;
+  cursor: pointer;
+  max-width: 170px;
 }
-.moneda option { color: var(--tinta); background: #FFFFFF; }
+.moneda__bandera {
+  width: 22px;
+  height: 15px;
+  border-radius: 3px;
+  overflow: hidden;
+  flex: none;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.28);
+}
+.moneda__bandera svg { width: 22px; height: 15px; display: block; }
+.moneda__texto { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.moneda__flecha { width: 9px; height: 5px; flex: none; color: var(--dorado); }
+.moneda__lista {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  min-width: 220px;
+  max-height: 340px;
+  overflow-y: auto;
+  background: rgba(18, 38, 58, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  box-shadow: 0 18px 44px rgba(4, 16, 28, 0.6);
+  padding: 6px;
+  display: none;
+}
+.moneda__lista.visible { display: block; }
+.moneda__opcion {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #EAF0F5;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+}
+.moneda__opcion:hover, .moneda__opcion.activo { background: rgba(255, 255, 255, 0.10); }
+.moneda__opcion .moneda__bandera { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2); }
+.moneda__opcion__texto { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .moneda-tasa {
   width: 82px;
   font-family: inherit;
