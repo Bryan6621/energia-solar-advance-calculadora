@@ -378,3 +378,156 @@ body {
   color: #F3E6BF;
   border-color: transparent;
 }
+
+/* ------------------------------------------------------------- hub (3 modos) */
+.hub {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 12px;
+}
+.hub__tarjeta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid var(--vidrio-borde);
+  border-radius: 20px;
+  padding: 18px 16px;
+  cursor: pointer;
+  box-shadow: 0 12px 32px rgba(10, 32, 54, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+.hub__icono {
+  flex: none;
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--azul-profundo), var(--azul-2));
+  color: var(--dorado);
+  display: grid; place-items: center;
+}
+.hub__icono svg { width: 28px; height: 28px; stroke: currentColor; }
+.hub__icono--pro { background: linear-gradient(135deg, #0E2B47, #12375B); color: #F3E6BF; }
+.hub__icono--cert { background: linear-gradient(135deg, #8F7528, var(--dorado)); color: #221A05; }
+.hub__titulo { font-size: 16px; font-weight: 800; color: var(--azul-profundo); }
+.hub__texto { font-size: 12px; color: var(--tinta-suave); margin-top: 2px; line-height: 1.4; }
+
+.boton-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #F4F7FA;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 10px;
+  padding: 7px 12px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.boton-volver svg { width: 15px; height: 15px; stroke: currentColor; }
+
+/* ------------------------------------------------------------- Advance-Pro */
+.tarjeta__ayuda {
+  margin-left: auto;
+  flex: none;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(18, 55, 91, 0.3);
+  background: rgba(18, 55, 91, 0.08);
+  color: var(--azul-profundo);
+  font-weight: 800;
+  font-size: 14px;
+  display: grid; place-items: center;
+  cursor: pointer;
+}
+.tarjeta__explicacion {
+  display: none;
+  margin-bottom: 12px;
+  font-size: 11.5px;
+  color: var(--tinta-suave);
+  line-height: 1.5;
+  background: rgba(194, 160, 66, 0.12);
+  border: 1px solid rgba(194, 160, 66, 0.3);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.tarjeta__explicacion.visible { display: block; }
+
+/* ------------------------------------------------------------- examen */
+.opciones { display: flex; flex-direction: column; gap: 8px; }
+.opcion {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px;
+  color: var(--tinta);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(18, 55, 91, 0.15);
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+.opcion input { accent-color: var(--dorado); }
+.progreso {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 8px 0 10px;
+}
+.progreso__barra {
+  height: 100%;
+  background: linear-gradient(90deg, var(--dorado), #D3B253);
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+/* ------------------------------------------------------------- diploma */
+.diploma { max-width: 760px; margin: 0 auto; }
+.diploma__marco {
+  position: relative;
+  background: #FFFFFF;
+  border-radius: 8px;
+  padding: 26px 22px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  border: 2px solid #16a085;
+  color: #2c3e50;
+}
+.diploma__sello {
+  position: absolute; top: 12px; right: 12px;
+  width: 44px; height: 44px;
+  color: #C2A042;
+  opacity: 0.85;
+}
+.diploma__sello svg { width: 100%; height: 100%; }
+.diploma__cabecera img { height: 46px; margin-bottom: 6px; }
+.diploma__empresa { font-size: 13px; font-weight: 800; letter-spacing: 2px; color: #2c3e50; }
+.diploma__nit { font-size: 10px; color: #566573; font-weight: 600; margin-top: 2px; }
+.diploma__otorga { font-size: 11px; color: #566573; text-transform: uppercase; letter-spacing: 3px; margin: 18px 0 6px; }
+.diploma__titulo { font-family: Georgia, "Times New Roman", serif; font-size: 30px; color: #16a085; margin: 0; letter-spacing: 2px; }
+.diploma__a { font-size: 11px; color: #566573; text-transform: uppercase; letter-spacing: 2px; margin: 16px 0 4px; }
+.diploma__nombre { font-family: Georgia, "Times New Roman", serif; font-size: 30px; font-style: italic; color: #2c3e50; margin: 0; line-height: 1.15; }
+.diploma__doc { font-size: 11px; color: #566573; font-weight: 600; margin-top: 6px; }
+.diploma__cuerpo { max-width: 88%; margin: 16px auto 0; font-size: 12px; line-height: 1.6; color: #2c3e50; }
+.diploma__programa { font-size: 15px; font-weight: 900; color: #16a085; text-transform: uppercase; letter-spacing: 1px; margin: 10px 0; }
+.diploma__puntaje { font-size: 11px; font-weight: 700; color: #566573; }
+.diploma__firma { margin: 22px auto 0; max-width: 240px; }
+.diploma__linea { border-top: 1px solid #2c3e50; margin-bottom: 6px; }
+.diploma__firmante { font-size: 12px; font-weight: 800; text-transform: uppercase; margin: 0; }
+.diploma__cargo { font-size: 10px; font-weight: 600; color: #16a085; text-transform: uppercase; letter-spacing: 1px; margin: 2px 0 0; }
+.diploma__fecha { font-size: 11px; color: #566573; margin-top: 8px; }
+.diploma__legal { font-size: 9px; color: #7f8c8d; line-height: 1.5; text-align: justify; margin: 18px 0 0; }
+.diploma__qr { margin-top: 16px; }
+.diploma__qr img { width: 34mm; height: 34mm; border: 1px solid #e0e6ed; border-radius: 6px; padding: 2px; background: #fff; }
+.diploma__qr p { font-size: 8px; font-weight: 800; color: #16a085; text-transform: uppercase; letter-spacing: 1px; margin: 4px 0 0; }
+.diploma__acciones { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
+
+@media print {
+  body { background: #fff !important; }
+  .cabecera, .tabbar, .diploma__acciones, .boton-volver { display: none !important; }
+  .contenido { padding: 0 !important; }
+  .diploma__marco { box-shadow: none; border-radius: 0; width: 100%; }
+}
