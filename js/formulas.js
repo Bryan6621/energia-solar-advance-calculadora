@@ -1,8 +1,9 @@
 /* formulas.js — las 17 fórmulas del capítulo 31 (fuente: «Energía Solar Advance»).
    Cada fórmula es un objeto con sus entradas editables (valores por defecto
-   sacados del libro) y una función de cálculo PURA. La integridad de la
-   fórmula es fija; solo se editan las variables de contexto del país del
-   usuario. Sin emojis: la interfaz usa SVG. */
+   sacados del libro) y una función de cálculo PURA. Las fórmulas pueden
+   modificarse y mejorarse (revisión a cargo del experto en fórmulas del
+   equipo); el usuario final solo edita las variables de contexto de su país.
+   Sin emojis: la interfaz usa SVG. */
 
 window.FORMULAS = [
   /* ===================== MÓDULO 1 — Diagnóstico de factura ===================== */
