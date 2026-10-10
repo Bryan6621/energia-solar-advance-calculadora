@@ -3,7 +3,7 @@
    para la navegación y stale-while-revalidate para recursos, de modo que cada
    apertura EN LÍNEA detecta y aplica nuevas versiones automáticamente. */
 
-var VERSION = "calc-advance-v3";
+var VERSION = "calc-advance-v4";
 var ARMADOR = [
   "./",
   "./index.html",
@@ -11,6 +11,7 @@ var ARMADOR = [
   "./css/app.css",
   "./js/formulas.js",
   "./js/herramientas-pro.js",
+  "./js/localizacion.js",
   "./js/examen.js",
   "./js/app.js",
   "./iconos/icon-192.png",

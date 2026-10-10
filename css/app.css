@@ -542,6 +542,89 @@ body {
 .diploma__qr p { font-size: 8px; font-weight: 800; color: #16a085; text-transform: uppercase; letter-spacing: 1px; margin: 4px 0 0; }
 .diploma__acciones { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
 
+/* ------------------------------------------------------------- modo oscuro */
+body.oscuro {
+  --tinta: #E7EDF3;
+  --tinta-suave: #A9B8C6;
+  --vidrio: rgba(20, 40, 60, 0.55);
+  --vidrio-borde: rgba(255, 255, 255, 0.14);
+  background:
+    radial-gradient(120% 80% at 80% -10%, rgba(194, 160, 66, 0.16), transparent 55%),
+    radial-gradient(120% 90% at 0% 110%, rgba(18, 55, 91, 0.7), transparent 60%),
+    linear-gradient(160deg, #081B2E 0%, #0A2036 55%, #061220 100%);
+  background-attachment: fixed;
+}
+body.oscuro .tarjeta { background: rgba(18, 38, 58, 0.6); border-color: rgba(255, 255, 255, 0.14); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08); }
+body.oscuro .tarjeta__nombre { color: #F4F7FA; }
+body.oscuro .tarjeta__formula { background: rgba(0, 0, 0, 0.25); color: #A9B8C6; border-color: rgba(255, 255, 255, 0.12); }
+body.oscuro .campo__entrada { background: rgba(0, 0, 0, 0.28); color: #E7EDF3; border-color: rgba(255, 255, 255, 0.16); }
+body.oscuro .campo__entrada:focus { background: #0E2B47; }
+body.oscuro .campo__etiqueta { color: #A9B8C6; }
+body.oscuro .nota { color: #A9B8C6; }
+body.oscuro .opcion { background: rgba(18, 38, 58, 0.55); color: #E7EDF3; border-color: rgba(255, 255, 255, 0.14); }
+body.oscuro .hub__tarjeta { background: rgba(18, 38, 58, 0.6); }
+body.oscuro .hub__titulo { color: #F4F7FA; }
+body.oscuro .hub__texto { color: #A9B8C6; }
+body.oscuro .fila-verificacion { background: rgba(18, 38, 58, 0.5); border-color: rgba(255, 255, 255, 0.12); }
+body.oscuro .fila-verificacion__concepto { color: #A9B8C6; }
+body.oscuro .fila-verificacion__esperado { color: #A9B8C6; }
+body.oscuro .tarjeta__explicacion { background: rgba(194, 160, 66, 0.14); }
+
+/* ------------------------------------------------------------- utilidades de tarjeta */
+.tarjeta__util {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+  flex: none;
+}
+.util {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(18, 55, 91, 0.3);
+  background: rgba(18, 55, 91, 0.08);
+  color: var(--azul-profundo);
+  font-weight: 800;
+  font-size: 13px;
+  display: grid; place-items: center;
+  cursor: pointer;
+  line-height: 1;
+}
+.util svg { width: 14px; height: 14px; stroke: currentColor; }
+body.oscuro .util { border-color: rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.08); color: #F4F7FA; }
+.util.activo { background: var(--dorado); color: #221A05; border-color: var(--dorado); }
+.tarjeta__derivacion {
+  display: none;
+  margin-top: 10px;
+  font-family: Consolas, "SFMono-Regular", Menlo, monospace;
+  font-size: 11.5px;
+  color: var(--tinta-suave);
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(18, 55, 91, 0.14);
+  border-radius: 10px;
+  padding: 10px 12px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+body.oscuro .tarjeta__derivacion { background: rgba(0, 0, 0, 0.25); border-color: rgba(255, 255, 255, 0.12); }
+.tarjeta__derivacion.visible { display: block; }
+
+/* ------------------------------------------------------------- ubicación */
+.ubicacion { margin-bottom: 14px; }
+.ubicacion .campo__entrada { font-size: 13.5px; }
+
+/* ------------------------------------------------------------- botón de modo oscuro */
+.boton-tema {
+  flex: none;
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 10px;
+  color: #F4F7FA;
+  cursor: pointer;
+}
+.boton-tema svg { width: 17px; height: 17px; stroke: currentColor; }
+
 @media print {
   body { background: #fff !important; }
   .cabecera, .tabbar, .diploma__acciones, .boton-volver { display: none !important; }

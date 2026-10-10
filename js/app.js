@@ -19,7 +19,9 @@
       educativo: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>',
       pro: '<path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 7.7l5.4-.8z"/>',
       certificado: '<circle cx="12" cy="9" r="5"/><path d="M8.5 13.5L7 22l5-3 5 3-1.5-8.5"/>',
-      volver: '<path d="M15 18l-6-6 6-6"/>'
+      volver: '<path d="M15 18l-6-6 6-6"/>',
+      voz: '<path d="M3 10v4h4l5 5V5L7 10z"/><path d="M15 9a4 4 0 0 1 0 6"/>',
+      compartir: '<path d="M4 12v8h16v-8"/><path d="M12 4v12"/><path d="M8 8l4-4 4 4"/>'
     };
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (d[nombre] || "") + '</svg>';
   }
@@ -104,11 +106,15 @@
         '<input class="campo__entrada" type="number" step="any" data-campo="' + campo.clave + '" value="' + campo.defecto + '"></div>';
     }).join("");
     return '<article class="tarjeta" data-fid="' + f.id + '">' +
-      '<div class="tarjeta__cabecera"><span class="tarjeta__indice">' + f.id + '</span><span class="tarjeta__nombre">' + f.nombre + '</span></div>' +
+      '<div class="tarjeta__cabecera"><span class="tarjeta__indice">' + f.id + '</span><span class="tarjeta__nombre">' + f.nombre + '</span>' +
+      '<div class="tarjeta__util"><button class="util util-deriv" aria-label="Ver derivación">=</button>' +
+      '<button class="util util-voz" aria-label="Leer en voz alta">' + icono("voz") + '</button>' +
+      '<button class="util util-compartir" aria-label="Compartir">' + icono("compartir") + '</button></div></div>' +
       '<div class="tarjeta__formula">' + f.expresion + '</div>' + campos +
       '<div class="resultado"><div><div class="resultado__etiqueta">Resultado</div>' +
       '<div class="resultado__valor" data-resultado>—</div></div>' +
       '<div class="resultado__unidad" data-unidad>' + f.unidad + '</div></div>' +
+      '<div class="tarjeta__derivacion" data-derivacion></div>' +
       (f.nota ? '<div class="nota">' + f.nota + '</div>' : "") +
       (f.orientativo ? '<span class="nota--orientativo">orientativo — verificar en PVGIS</span>' : "") +
       '</article>';
@@ -131,16 +137,26 @@
       '</article>';
   }
 
+  function derivacionTexto(entradas, valores, expresion, resultado, unidad) {
+    var lineas = entradas.map(function (c) {
+      return c.etiqueta + " = " + valores[c.clave] + " " + c.unidad;
+    });
+    return "Expresión: " + expresion + "\nEntradas:\n· " + lineas.join("\n· ") +
+      "\nResultado: " + resultado + " " + unidad;
+  }
+
   function recalcular(tarjeta) {
     var valores = leerValores(tarjeta);
     var el = tarjeta.querySelector("[data-resultado]");
     var unidadEl = tarjeta.querySelector("[data-unidad]");
+    var derivEl = tarjeta.querySelector("[data-derivacion]");
     if (tarjeta.dataset.fid) {
       var f = FORMULAS.find(function (x) { return String(x.id) === tarjeta.dataset.fid; });
       if (!f) { return; }
       var r = f.calculo(valores);
       el.textContent = isFinite(r) ? formatearResultado(f.unidad, r, f.formato) : "—";
       if (unidadEl) { unidadEl.textContent = unidadMostrada(f.unidad); }
+      if (derivEl) { derivEl.textContent = derivacionTexto(f.inputs, valores, f.expresion, f.formato(r), f.unidad); }
     } else if (tarjeta.dataset.pid) {
       var h = HERRAMIENTAS.find(function (x) { return x.id === tarjeta.dataset.pid; });
       if (!h) { return; }
@@ -151,11 +167,50 @@
       } else {
         el.textContent = isFinite(r2) ? formatearResultado(h.unidad, r2, h.formato) : "—";
         if (unidadEl) { unidadEl.textContent = unidadMostrada(h.unidad); }
+        if (derivEl) { derivEl.textContent = derivacionTexto(h.inputs, valores, h.expresion, h.formato(r2), h.unidad); }
       }
     }
   }
 
   function recalcularTodo() { document.querySelectorAll(".tarjeta").forEach(recalcular); }
+
+  function cablearUtilidades() {
+    document.querySelectorAll(".tarjeta").forEach(function (tarjeta) {
+      var deriv = tarjeta.querySelector(".util-deriv");
+      var voz = tarjeta.querySelector(".util-voz");
+      var compartir = tarjeta.querySelector(".util-compartir");
+      var nombre = tarjeta.querySelector(".tarjeta__nombre").textContent;
+      if (deriv) {
+        deriv.addEventListener("click", function () {
+          var d = tarjeta.querySelector("[data-derivacion]");
+          d.classList.toggle("visible");
+          deriv.classList.toggle("activo", d.classList.contains("visible"));
+        });
+      }
+      if (voz && "speechSynthesis" in window) {
+        voz.addEventListener("click", function () {
+          var texto = nombre + ". " + (tarjeta.querySelector(".tarjeta__formula") ? tarjeta.querySelector(".tarjeta__formula").textContent : "") +
+            ". Resultado: " + tarjeta.querySelector("[data-resultado]").textContent + " " + tarjeta.querySelector("[data-unidad]").textContent;
+          window.speechSynthesis.cancel();
+          var u = new SpeechSynthesisUtterance(texto);
+          u.lang = "es-ES";
+          window.speechSynthesis.speak(u);
+        });
+      }
+      if (compartir) {
+        compartir.addEventListener("click", function () {
+          var texto = nombre + " = " + tarjeta.querySelector("[data-resultado]").textContent + " " + tarjeta.querySelector("[data-unidad]").textContent + " — Calculadora Solar Advance";
+          if (navigator.share) {
+            navigator.share({ title: "Calculadora Solar Advance", text: texto }).catch(function () {});
+          } else if (navigator.clipboard) {
+            navigator.clipboard.writeText(texto).then(function () { window.alert("Copiado al portapapeles"); });
+          } else {
+            window.prompt("Copia el resultado:", texto);
+          }
+        });
+      }
+    });
+  }
 
   function construirVista(modulo) {
     return '<section class="vista" data-modulo="' + modulo.id + '">' +
@@ -247,6 +302,8 @@
     contenido.querySelectorAll(".preset").forEach(function (b) {
       b.addEventListener("click", function () { aplicarPreset(b.dataset.preset); });
     });
+    cablearUtilidades();
+    montarUbicacion();
   }
 
   function mostrarPro() {
@@ -264,6 +321,34 @@
         tarjeta.querySelector(".tarjeta__explicacion").classList.toggle("visible");
       });
       recalcular(tarjeta);
+    });
+    cablearUtilidades();
+  }
+
+  function montarUbicacion() {
+    var vista = document.querySelector('.vista[data-modulo="2"]');
+    if (!vista || !window.CIUDADES) { return; }
+    var opciones = window.CIUDADES.map(function (c) {
+      return '<option value="' + c.hsp + '">' + c.ciudad + " · " + c.pais + ' (' + c.hsp + ' HSP)</option>';
+    }).join("");
+    var card = document.createElement("div");
+    card.className = "tarjeta ubicacion";
+    card.innerHTML =
+      '<div class="tarjeta__cabecera"><span class="tarjeta__indice">U</span><span class="tarjeta__nombre">Ubicación de referencia</span></div>' +
+      '<div class="campo"><label class="campo__etiqueta">Ciudad (HSP orientativo)</label>' +
+      '<select class="campo__entrada" id="ubicacion-ciudad">' + opciones + '</select></div>' +
+      '<span class="nota--orientativo">orientativo — verificar en PVGIS</span>';
+    vista.insertBefore(card, vista.firstChild);
+    card.querySelector("#ubicacion-ciudad").addEventListener("change", function () {
+      var hsp = parseFloat(card.querySelector("#ubicacion-ciudad").value);
+      [4, 5].forEach(function (fid) {
+        var t = document.querySelector('.tarjeta[data-fid="' + fid + '"]');
+        if (t) {
+          var inpHsp = t.querySelector('input[data-campo="hsp"]');
+          if (inpHsp) { inpHsp.value = hsp; }
+          recalcular(t);
+        }
+      });
     });
   }
 
@@ -339,6 +424,15 @@
     montarTabbar();
     montarSelectorMoneda();
     enrutar();
+    // Modo oscuro (persistido)
+    function aplicarTema(oscuro) {
+      document.body.classList.toggle("oscuro", oscuro);
+      try { localStorage.setItem("advance:tema", oscuro ? "oscuro" : "claro"); } catch (e) {}
+    }
+    try { aplicarTema(localStorage.getItem("advance:tema") === "oscuro"); } catch (e) {}
+    document.getElementById("boton-tema").addEventListener("click", function () {
+      aplicarTema(!document.body.classList.contains("oscuro"));
+    });
     document.getElementById("boton-casa").addEventListener("click", function () { enrutar("#/"); });
     document.getElementById("boton-instalar").addEventListener("click", function () {
       if (promptInstalacion) {
