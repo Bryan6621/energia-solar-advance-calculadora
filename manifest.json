@@ -1,17 +1,25 @@
 {
   "name": "Calculadora Solar Advance",
   "short_name": "Solar Advance",
-  "description": "Calculadora del libro «Energía Solar Advance»: las 17 fórmulas del capítulo 31 con verificación contra los casos Torres y Los Alisos.",
-  "start_url": "./",
+  "description": "Las fórmulas del capítulo 31 de «Energía Solar Advance», verificadas contra el libro, con la operación a la vista y gráficas en vivo. Casos Torres, La Espiga y Los Alisos.",
+  "id": "./",
+  "start_url": "./#/",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#0E2B47",
-  "theme_color": "#12375B",
+  "orientation": "any",
+  "background_color": "#0F2B48",
+  "theme_color": "#0F2B48",
   "lang": "es",
+  "dir": "ltr",
+  "categories": ["education", "utilities", "business"],
   "icons": [
     { "src": "iconos/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "iconos/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "iconos/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "iconos/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Dimensionar un sistema", "short_name": "Dimensionar", "url": "./#/educativo/2", "icons": [{ "src": "iconos/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Financiación y rentabilidad", "short_name": "Finanzas", "url": "./#/educativo/4", "icons": [{ "src": "iconos/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Verificar contra el libro", "short_name": "Verificar", "url": "./#/educativo/verificar", "icons": [{ "src": "iconos/icon-192.png", "sizes": "192x192" }] }
   ]
 }

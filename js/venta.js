@@ -1,186 +1,133 @@
-/* venta.js — herramientas de venta del modo Advance-Pro:
-   1) Asesor de decisión (árbol guiado on-grid / híbrido / off-grid).
-   2) Simulador antes/después (curva SVG año a año con punto de payback).
-   3) Detective de facturas (reconstruye las 5 zonas y detecta anomalías).
-   Todo SVG, sin librerías, sin emojis, fiel al libro. */
-
+/* venta.js — herramientas de mesa del modo Advance Pro:
+   1) Asesor de decisión (on-grid, híbrido o isla), 2) Simulador antes y después
+   (facturas acumuladas contra inversión, con OPEX, reemplazo del inversor y
+   payback interpolado), 3) Detective de facturas (cinco zonas y costo efectivo).
+   Gráficas con graficos.js; sin librerías, sin emojis. */
 window.Venta = (function () {
-  function volverBoton(etiqueta) {
-    return '<button class="boton-volver" id="volver-venta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg> ' + etiqueta + '</button>';
-  }
+  "use strict";
+  var M = window.Motor;
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
-  function enlazarVolver(contenedor, fn) {
-    var b = contenedor.querySelector("#volver-venta");
-    if (b) { b.addEventListener("click", fn); }
-  }
+  /* ------------------------------------------------------------ 1. Asesor */
+  function asesor(cont, volver) {
+    var P = [
+      { id: "red", texto: "¿La red eléctrica llega al predio?", si: "Sí, llega", no: "No llega" },
+      { id: "confiable", texto: "¿La red es confiable, con cortes poco frecuentes?", si: "Sí, es confiable", no: "No, falla seguido" },
+      { id: "meta", texto: "¿Qué pesa más para el cliente?", si: "Bajar la factura", no: "Tener respaldo en los cortes" }
+    ];
+    cont.innerHTML = volver + '<header class="vista__cabecera"><h2 class="vista__titulo">Asesor de decisión</h2>' +
+      '<p class="vista__intro">Tres preguntas, en el orden del libro: primero la red, después su calidad, al final la meta del cliente.</p></header>' +
+      P.map(function (p, i) {
+        return '<fieldset class="pregunta" data-p="' + i + '"' + (i ? " hidden" : "") + '><legend><span class="pregunta__n">' + (i + 1) + "</span>" + p.texto + "</legend>" +
+          '<div class="opciones"><label class="opcion"><input type="radio" name="' + p.id + '" value="si"><span>' + p.si + '</span></label>' +
+          '<label class="opcion"><input type="radio" name="' + p.id + '" value="no"><span>' + p.no + "</span></label></div></fieldset>";
+      }).join("") + '<div class="recomendacion" id="recomendacion" hidden aria-live="polite"></div>';
 
-  /* ------------------------------------------------------------- 1. Asesor de decisión */
-  function asesor(contenedor, volverFn) {
-    contenedor.innerHTML =
-      '<h2 class="vista__titulo">Asesor de decisión</h2>' +
-      '<p class="vista__intro">Responde tres preguntas y recibe la recomendación del libro sobre qué sistema te conviene.</p>' +
-      volverBoton("Advance · Pro") +
-      '<div class="tarjeta"><div class="tarjeta__cabecera"><span class="tarjeta__indice">1</span><span class="tarjeta__nombre">¿La red eléctrica llega a tu predio?</span></div>' +
-      '<div class="opciones" id="preg-1"><label class="opcion"><input type="radio" name="p1" value="si"> <span>Sí, llega</span></label>' +
-      '<label class="opcion"><input type="radio" name="p1" value="no"> <span>No llega</span></label></div></div>' +
-      '<div class="tarjeta" id="tarjeta-2" style="display:none"><div class="tarjeta__cabecera"><span class="tarjeta__indice">2</span><span class="tarjeta__nombre">¿La red es confiable (cortes poco frecuentes)?</span></div>' +
-      '<div class="opciones" id="preg-2"><label class="opcion"><input type="radio" name="p2" value="si"> <span>Sí, confiable</span></label>' +
-      '<label class="opcion"><input type="radio" name="p2" value="no"> <span>No, falla seguido</span></label></div></div>' +
-      '<div class="tarjeta" id="tarjeta-3" style="display:none"><div class="tarjeta__cabecera"><span class="tarjeta__indice">3</span><span class="tarjeta__nombre">¿Tu objetivo principal es bajar la factura?</span></div>' +
-      '<div class="opciones" id="preg-3"><label class="opcion"><input type="radio" name="p3" value="si"> <span>Sí, ahorrar</span></label>' +
-      '<label class="opcion"><input type="radio" name="p3" value="no"> <span>Quiero respaldo ante cortes</span></label></div></div>' +
-      '<div class="tarjeta" id="resultado-asesor" style="display:none"></div>';
-
-    function recomendacion(texto, detalle) {
-      document.getElementById("resultado-asesor").style.display = "block";
-      document.getElementById("resultado-asesor").innerHTML =
-        '<div class="tarjeta__cabecera"><span class="tarjeta__indice">R</span><span class="tarjeta__nombre">Recomendación</span></div>' +
-        '<p class="tarjeta__formula">' + texto + '</p>' + detalle;
+    function valor(n) { var x = cont.querySelector('input[name="' + n + '"]:checked'); return x ? x.value : null; }
+    function mostrar(titulo, texto, ruta, enlace) {
+      var r = cont.querySelector("#recomendacion");
+      r.hidden = false;
+      r.innerHTML = '<p class="recomendacion__etiqueta">Recomendación</p><p class="recomendacion__titulo">' + titulo + "</p><p>" + texto + "</p>" +
+        (ruta ? '<a class="boton" href="' + ruta + '">' + enlace + "</a>" : "");
     }
-
     function evaluar() {
-      var p1 = (contenedor.querySelector('input[name="p1"]:checked') || {}).value;
-      if (p1 === "no") {
-        recomendacion("Sistema off-grid (isla)", '<p class="nota">No hay red: dimensiona la isla completa con la Parte VIII (banco de baterías, autonomía y generador de respaldo).</p>');
-        return;
-      }
-      document.getElementById("tarjeta-2").style.display = "block";
-      var p2 = (contenedor.querySelector('input[name="p2"]:checked') || {}).value;
-      if (p2 === "no") {
-        recomendacion("Sistema híbrido con baterías", '<p class="nota">La red falla: añade respaldo al on-grid. El inversor híbrido alimenta cargas críticas cuando hay cortes.</p>');
-        return;
-      }
-      document.getElementById("tarjeta-3").style.display = "block";
-      var p3 = (contenedor.querySelector('input[name="p3"]:checked') || {}).value;
-      if (p3 === "no") {
-        recomendacion("Sistema híbrido (respaldo)", '<p class="nota">Priorizas el respaldo: híbrido con banco dimensionado a tus cargas críticas.</p>');
-      } else {
-        recomendacion("Sistema on-grid", '<p class="nota">Red confiable y ahorro como meta: on-grid puro. Usa el dimensionador del modo educativo (módulo Dimensión).</p>');
-      }
+      var q = cont.querySelectorAll(".pregunta"), r = cont.querySelector("#recomendacion");
+      r.hidden = true; q[1].hidden = true; q[2].hidden = true;
+      var red = valor("red");
+      if (!red) { return; }
+      if (red === "no") { mostrar("Sistema autónomo (isla)", "Sin red, el sistema es la red: campo, banco de baterías con días de autonomía, inversor cargador y generador de respaldo para la semana gris (Parte VIII).", "#/educativo/5", "Dimensionar la isla"); return; }
+      q[1].hidden = false;
+      var conf = valor("confiable");
+      if (!conf) { return; }
+      if (conf === "no") { mostrar("Híbrido con baterías", "La red está, pero falla: on-grid con inversor híbrido y un banco dimensionado a las cargas críticas, no a toda la casa.", "#/educativo/5", "Dimensionar el banco"); return; }
+      q[2].hidden = false;
+      var meta = valor("meta");
+      if (!meta) { return; }
+      if (meta === "no") { mostrar("Híbrido de respaldo", "La red es buena y el cliente quiere tranquilidad: híbrido con banco pequeño para cargas críticas. Explique que el banco suma costo y no ahorro.", "#/educativo/5", "Dimensionar el banco"); }
+      else { mostrar("On-grid", "Red confiable y ahorro como meta: on-grid puro, dimensionado con el peor mes y la regla del ÷0,8. Es la opción de menor costo por kWh.", "#/educativo/2", "Abrir el dimensionador"); }
     }
-
-    contenedor.querySelectorAll('input[name="p1"], input[name="p2"], input[name="p3"]').forEach(function (r) {
-      r.addEventListener("change", evaluar);
-    });
-    enlazarVolver(contenedor, volverFn);
+    cont.querySelectorAll("input[type=radio]").forEach(function (x) { x.addEventListener("change", evaluar); });
   }
 
-  /* ------------------------------------------------------------- 2. Simulador antes/después */
-  function simulador(contenedor, volverFn) {
-    contenedor.innerHTML =
-      '<h2 class="vista__titulo">Simulador antes / después</h2>' +
-      '<p class="vista__intro">Compara pagar la factura para siempre contra invertir en tu sistema, año a año, con el punto exacto de payback.</p>' +
-      volverBoton("Advance · Pro") +
-      '<div class="tarjeta">' +
-      '<div class="campo"><label class="campo__etiqueta">Factura mensual actual <span class="campo__unidad">USD/mes</span></label><input class="campo__entrada" id="sim-factura" type="number" step="any" value="40"></div>' +
-      '<div class="campo"><label class="campo__etiqueta">Ahorro mensual con solar <span class="campo__unidad">USD/mes</span></label><input class="campo__entrada" id="sim-ahorro" type="number" step="any" value="27.2"></div>' +
-      '<div class="campo"><label class="campo__etiqueta">CAPEX del sistema <span class="campo__unidad">USD</span></label><input class="campo__entrada" id="sim-capex" type="number" step="any" value="2160"></div>' +
-      '<div class="campo"><label class="campo__etiqueta">Aumento anual de tarifa <span class="campo__unidad">%/año</span></label><input class="campo__entrada" id="sim-infla" type="number" step="any" value="3"></div>' +
-      '<div class="campo"><label class="campo__etiqueta">Horizonte <span class="campo__unidad">años</span></label><input class="campo__entrada" id="sim-anos" type="number" step="any" value="10"></div>' +
-      '</div>' +
-      '<div class="tarjeta"><div class="tarjeta__cabecera"><span class="tarjeta__indice">G</span><span class="tarjeta__nombre">Acumulado a lo largo del tiempo</span></div>' +
-      '<svg id="sim-grafico" viewBox="0 0 320 190" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto"></svg>' +
-      '<div class="sim-leyenda"><span class="sim-leyenda__item"><span class="sim-leyenda__punto" style="background:#B3472E"></span> Sin solar</span>' +
-      '<span class="sim-leyenda__item"><span class="sim-leyenda__punto" style="background:#2F6B4F"></span> Con solar</span>' +
-      '<span class="sim-leyenda__item"><span class="sim-leyenda__punto" style="background:#C2A042"></span> Payback</span></div>' +
-      '<div class="resultado"><div><div class="resultado__etiqueta">Payback</div><div class="resultado__valor" id="sim-payback">—</div></div><div class="resultado__unidad">años</div></div>' +
-      '</div>';
-
+  /* ------------------------------------------------------------ 2. Simulador */
+  function simulador(cont, volver, u) {
+    var entradas = [
+      { clave: "factura", etiqueta: "Factura mensual actual", unidad: "USD/mes", defecto: 40, min: 5, max: 2000, paso: 1 },
+      { clave: "residual", etiqueta: "Factura con el sistema", unidad: "USD/mes", defecto: 7, min: 0, max: 2000, paso: 0.5 },
+      { clave: "capex", etiqueta: "CAPEX del sistema", unidad: "USD", defecto: 2700, min: 500, max: 60000, paso: 50 },
+      { clave: "opex", etiqueta: "OPEX anual", unidad: "USD/año", defecto: 27, min: 0, max: 2000, paso: 1 },
+      { clave: "reemplazo", etiqueta: "Reemplazo del inversor (año 12)", unidad: "USD", defecto: 330, min: 0, max: 10000, paso: 10 },
+      { clave: "infla", etiqueta: "Aumento anual de la tarifa", unidad: "%/año", defecto: 0, min: 0, max: 15, paso: 0.5 },
+      { clave: "anos", etiqueta: "Horizonte", unidad: "años", defecto: 25, min: 5, max: 30, paso: 1 }
+    ];
+    cont.innerHTML = volver + '<header class="vista__cabecera"><h2 class="vista__titulo">Simulador antes y después</h2>' +
+      '<p class="vista__intro">Lo que el cliente pagaría sin hacer nada frente a lo que paga con el sistema: inversión, factura residual, mantenimiento y el reemplazo del inversor.</p></header>' +
+      '<article class="formula"><div class="formula__cuerpo"><div class="formula__entradas">' + entradas.map(function (c) { return u.campoHTML(c); }).join("") + "</div>" +
+      '<div class="formula__salidas"><div class="resultado"><span class="resultado__valor" id="sim-payback">—</span><span class="resultado__unidad">años de payback</span></div>' +
+      '<p class="operacion" id="sim-operacion"></p><div class="grafico" id="sim-grafico"></div></div></div>' +
+      '<p class="formula__nota">Con aumento de tarifa en 0 % el payback coincide con el del libro (7,3 años en el caso Torres). Cada punto de aumento anual lo acorta.</p></article>';
+    var tarjeta = cont.querySelector(".formula"), g = cont.querySelector("#sim-grafico");
     function redibujar() {
-      var factura = parseFloat(document.getElementById("sim-factura").value) || 0;
-      var ahorro = parseFloat(document.getElementById("sim-ahorro").value) || 0;
-      var capex = parseFloat(document.getElementById("sim-capex").value) || 0;
-      var infla = (parseFloat(document.getElementById("sim-infla").value) || 0) / 100;
-      var anos = Math.max(1, parseInt(document.getElementById("sim-anos").value, 10) || 10);
-
-      var sin = 0, con = capex, residuo = factura - ahorro, facturaBase = factura;
-      var ptsSin = [], ptsCon = [], payback = null;
-      var maxY = capex;
-
-      for (var k = 0; k <= anos; k++) {
-        var f = facturaBase * 12 * Math.pow(1 + infla, k);
-        sin += f;
-        con += residuo * 12 * Math.pow(1 + infla, k);
-        ptsSin.push([k, sin]); ptsCon.push([k, con]);
-        if (payback === null && con <= sin) { payback = k; }
-        maxY = Math.max(maxY, sin, con);
+      var v = u.leerValores(tarjeta), n = Math.max(1, Math.round(v.anos)), i = v.infla / 100;
+      var xs = [0], sin = [0], con = [v.capex], s = 0, c = v.capex, payback = NaN;
+      for (var t = 1; t <= n; t++) {
+        var k = Math.pow(1 + i, t - 1);
+        var anteriorS = s, anteriorC = c;
+        s += v.factura * 12 * k;
+        c += v.residual * 12 * k + v.opex + (t === 12 ? v.reemplazo : 0);
+        if (isNaN(payback) && c <= s) {
+          var d0 = anteriorC - anteriorS, d1 = c - s;
+          payback = t - 1 + d0 / (d0 - d1);
+        }
+        xs.push(t); sin.push(s); con.push(c);
       }
-
-      var W = 320, H = 190, mL = 6, mR = 6, mT = 6, mB = 14;
-      function X(k) { return mL + (W - mL - mR) * (k / anos); }
-      function Y(v) { return mT + (H - mT - mB) * (1 - v / maxY); }
-      function linea(pts, color) {
-        return '<polyline fill="none" stroke="' + color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="' +
-          pts.map(function (p) { return X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1); }).join(" ") + '"/>';
-      }
-      var svg = '<line x1="' + mL + '" y1="' + (H - mB) + '" x2="' + (W - mR) + '" y2="' + (H - mB) + '" stroke="#C9D4DE" stroke-width="1"/>' +
-        linea(ptsSin, "#B3472E") + linea(ptsCon, "#2F6B4F");
-      if (payback !== null) {
-        svg += '<line x1="' + X(payback) + '" y1="' + mT + '" x2="' + X(payback) + '" y2="' + (H - mB) + '" stroke="#C2A042" stroke-width="1.4" stroke-dasharray="4 3"/>';
-        svg += '<circle cx="' + X(payback) + '" cy="' + Y(ptsCon[payback][1]) + '" r="3.5" fill="#C2A042"/>';
-      }
-      document.getElementById("sim-grafico").innerHTML = svg;
-      document.getElementById("sim-payback").textContent = payback === null ? "> " + anos : String(payback);
+      cont.querySelector("#sim-payback").textContent = isNaN(payback) ? "más de " + n : M.es(payback, 1);
+      cont.querySelector("#sim-operacion").textContent = "En " + n + " años: sin sistema " + u.ctx.m(s) + " · con sistema " + u.ctx.m(c) + " · diferencia " + u.ctx.m(s - c);
+      window.Graficos.dibujar(g, { tipo: "linea", titulo: "Pagos acumulados", x: xs, etiquetaX: "año",
+        series: [{ nombre: "Sin sistema", valores: sin, tono: "rojo" }, { nombre: "Con sistema", valores: con, tono: "azul" }],
+        marcador: isNaN(payback) ? null : { x: payback, y: v.capex + (v.residual * 12 + v.opex) * payback, etiqueta: "payback " + M.es(payback, 1) + " años" },
+        moneda: true, decimales: 0 }, u.ctx);
     }
-
-    ["sim-factura", "sim-ahorro", "sim-capex", "sim-infla", "sim-anos"].forEach(function (id) {
-      document.getElementById(id).addEventListener("input", redibujar);
-    });
+    u.cablearCampos(tarjeta, redibujar);
+    window.Graficos.vigilar(g, redibujar);
     redibujar();
-    enlazarVolver(contenedor, volverFn);
   }
 
-  /* ------------------------------------------------------------- 3. Detective de facturas */
-  function detective(contenedor, volverFn) {
-    contenedor.innerHTML =
-      '<h2 class="vista__titulo">Detective de facturas</h2>' +
-      '<p class="vista__intro">Ingresa los datos de la factura y reconstruye las 5 zonas del capítulo 2, detectando anomalías.</p>' +
-      volverBoton("Advance · Pro") +
-      '<div class="tarjeta">' +
-      '<div class="campo"><label class="campo__etiqueta">Consumo <span class="campo__unidad">kWh/mes</span></label><input class="campo__entrada" id="det-kwh" type="number" step="any" value="220"></div>' +
-      '<div class="campo"><label class="campo__etiqueta">Tarifa <span class="campo__unidad">USD/kWh</span></label><input class="campo__entrada" id="det-tarifa" type="number" step="any" value="0.15"></div>' +
-      '<div class="campo"><label class="campo__etiqueta">Cargos fijos <span class="campo__unidad">USD/mes</span></label><input class="campo__entrada" id="det-fijos" type="number" step="any" value="7"></div>' +
-      '<div class="campo"><label class="campo__etiqueta">Impuestos (+) o subsidios (−) <span class="campo__unidad">%</span></label><input class="campo__entrada" id="det-imp" type="number" step="any" value="8"></div>' +
-      '</div>' +
-      '<div class="tarjeta" id="det-resultado"></div>';
-
+  /* ------------------------------------------------------------ 3. Detective */
+  function detective(cont, volver, u) {
+    var entradas = [
+      { clave: "kwh", etiqueta: "Consumo del mes", unidad: "kWh/mes", defecto: 220, min: 20, max: 5000, paso: 5 },
+      { clave: "tarifa", etiqueta: "Precio de la energía", unidad: "USD/kWh", defecto: 0.15, min: 0.01, max: 0.8, paso: 0.005 },
+      { clave: "fijos", etiqueta: "Cargos fijos", unidad: "USD/mes", defecto: 7, min: 0, max: 300, paso: 0.5 },
+      { clave: "imp", etiqueta: "Impuestos (+) o subsidios (−)", unidad: "%", defecto: 0, min: -50, max: 40, paso: 1 },
+      { clave: "promedio", etiqueta: "Consumo promedio de los últimos 6 meses", unidad: "kWh/mes", defecto: 220, min: 20, max: 5000, paso: 5 }
+    ];
+    cont.innerHTML = volver + '<header class="vista__cabecera"><h2 class="vista__titulo">Detective de facturas</h2>' +
+      '<p class="vista__intro">Las cinco zonas de la factura del capítulo 2 y las señales que conviene preguntar al cliente.</p></header>' +
+      '<article class="formula"><div class="formula__cuerpo"><div class="formula__entradas">' + entradas.map(function (c) { return u.campoHTML(c); }).join("") + "</div>" +
+      '<div class="formula__salidas"><div class="resultado"><span class="resultado__valor" id="det-total">—</span><span class="resultado__unidad" id="det-unidad"></span></div>' +
+      '<dl class="extras" id="det-zonas"></dl><div class="grafico" id="det-grafico"></div><ul class="alertas" id="det-alertas"></ul></div></div></article>';
+    var t = cont.querySelector(".formula");
     function analizar() {
-      var kwh = parseFloat(document.getElementById("det-kwh").value) || 0;
-      var tarifa = parseFloat(document.getElementById("det-tarifa").value) || 0;
-      var fijos = parseFloat(document.getElementById("det-fijos").value) || 0;
-      var imp = (parseFloat(document.getElementById("det-imp").value) || 0) / 100;
-      var energia = kwh * tarifa;
-      var impuestos = (energia + fijos) * imp;
-      var total = energia + fijos + impuestos;
+      var v = u.leerValores(t), energia = v.kwh * v.tarifa, base = energia + v.fijos, imp = base * v.imp / 100, total = base + imp;
+      cont.querySelector("#det-total").textContent = u.ctx.m(total, 2);
+      cont.querySelector("#det-unidad").textContent = "total a pagar";
+      var zonas = [["1 · Consumo", M.es(v.kwh) + " kWh"], ["2 · Energía", u.ctx.m(energia, 2)], ["3 · Cargos fijos", u.ctx.m(v.fijos, 2)],
+                   ["4 · " + (imp < 0 ? "Subsidios" : "Impuestos y contribuciones"), u.ctx.m(imp, 2)], ["5 · Costo efectivo", u.ctx.m(total / v.kwh, 3) + " por kWh"]];
+      cont.querySelector("#det-zonas").innerHTML = zonas.map(function (z) { return "<div><dt>" + z[0] + "</dt><dd>" + z[1] + "</dd></div>"; }).join("");
       var alertas = [];
-      if (fijos > total * 0.4) { alertas.push("Cargos fijos elevados (más del 40% del total)."); }
-      if (tarifa > 0.20) { alertas.push("Tarifa alta frente al promedio regional."); }
-      if (imp > 0.20) { alertas.push("Carga impositiva alta (más del 20%)."); }
-
-      var filas = [
-        ["1 · Consumo (kWh)", kwh.toFixed(0) + " kWh"],
-        ["2 · Energía", monedaStr(energia)],
-        ["3 · Cargos fijos", monedaStr(fijos)],
-        ["4 · Impuestos / subsidios", monedaStr(impuestos)],
-        ["5 · Total a pagar", monedaStr(total)]
-      ].map(function (r) {
-        return '<div class="fila-verificacion"><span class="fila-verificacion__concepto">' + r[0] + '</span><span class="fila-verificacion__valores">' + r[1] + '</span></div>';
-      }).join("");
-
-      document.getElementById("det-resultado").innerHTML =
-        '<div class="tarjeta__cabecera"><span class="tarjeta__indice">D</span><span class="tarjeta__nombre">Las 5 zonas de tu factura</span></div>' + filas +
-        (alertas.length ? '<p class="nota" style="color:var(--alerta)">Anomalías detectadas:</p>' + alertas.map(function (a) { return '<p class="nota">· ' + a + '</p>'; }).join("") : '<p class="nota">Sin anomalías: la factura responde a la estructura esperada.</p>');
+      if (v.fijos / total > 0.3) { alertas.push("Los cargos fijos pesan " + M.es(v.fijos / total * 100) + " % de la factura: ningún sistema los elimina. Ajuste la promesa."); }
+      if (v.promedio > 0 && Math.abs(v.kwh - v.promedio) / v.promedio > 0.2) { alertas.push("Este mes se aparta " + M.es(Math.abs(v.kwh - v.promedio) / v.promedio * 100) + " % del promedio: dimensione con el promedio, no con un mes atípico."); }
+      if (v.imp < 0) { alertas.push("Hay subsidio: el ahorro real del cliente es menor que la energía a tarifa plena. Pregunte si lo pierde al bajar su consumo."); }
+      if (total / v.kwh > v.tarifa * 1.25) { alertas.push("El costo efectivo supera en más de 25 % al precio de la energía: el argumento de venta es la energía, no la factura completa."); }
+      cont.querySelector("#det-alertas").innerHTML = alertas.length ? alertas.map(function (a) { return "<li>" + esc(a) + "</li>"; }).join("") : '<li class="alertas__ok">Sin señales de alerta: la factura responde a la estructura esperada.</li>';
+      window.Graficos.dibujar(cont.querySelector("#det-grafico"), { tipo: "barras", orientacion: "h", titulo: "La factura por zonas", categorias: ["Factura"], apilado: true,
+        series: [{ nombre: "Energía", valores: [energia], tono: "azul" }, { nombre: "Cargos fijos", valores: [v.fijos], tono: "gris" }, { nombre: "Impuestos", valores: [Math.max(0, imp)], tono: "oro" }],
+        moneda: true, decimales: 2 }, u.ctx);
     }
-
-    function monedaStr(v) {
-      return (window.formatearMonedaDetalle ? window.formatearMonedaDetalle(v) : "$ " + v.toFixed(2));
-    }
-
-    ["det-kwh", "det-tarifa", "det-fijos", "det-imp"].forEach(function (id) {
-      document.getElementById(id).addEventListener("input", analizar);
-    });
+    u.cablearCampos(t, analizar);
+    window.Graficos.vigilar(cont.querySelector("#det-grafico"), analizar);
     analizar();
-    enlazarVolver(contenedor, volverFn);
   }
 
   return { asesor: asesor, simulador: simulador, detective: detective };

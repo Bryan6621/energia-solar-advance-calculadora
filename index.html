@@ -4,111 +4,77 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Calculadora Solar Advance</title>
-  <meta name="theme-color" content="#12375B">
+  <meta name="description" content="Las fórmulas del capítulo 31 de «Energía Solar Advance», verificadas contra el libro, con la operación a la vista y gráficas en vivo. Funciona sin conexión.">
+  <meta name="theme-color" content="#0F2B48">
+  <meta name="color-scheme" content="light dark">
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./iconos/apple-touch-icon.png">
   <link rel="icon" type="image/png" href="./iconos/favicon-32.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Solar Advance">
+  <link rel="preload" href="./fuentes/source-serif-4-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="./css/app.css">
 </head>
 <body>
   <header class="cabecera">
-    <div class="cabecera__logo"><img src="./logo_advance.png" alt="Logo Solar Advance"></div>
-    <div class="cabecera__texto">
-      <div class="cabecera__titulo">Calculadora Solar Advance</div>
-      <div class="cabecera__subtitulo">Las 17 fórmulas del capítulo 31 · verificadas contra el libro</div>
-    </div>
-    <div class="cabecera__derecha">
-      <div class="cabecera__acciones">
-        <button class="boton-casa" id="boton-casa" aria-label="Volver al inicio" title="Volver al inicio">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg>
+    <a class="cabecera__marca" href="#/" aria-label="Inicio de la Calculadora Solar Advance">
+      <img class="cabecera__logo" src="./logo_advance.png" alt="">
+      <span class="cabecera__textos"><span class="cabecera__titulo"><span class="cabecera__largo">Calculadora </span>Solar Advance</span><span class="cabecera__subtitulo">Fórmulas del libro, verificadas</span></span>
+    </a>
+    <div class="cabecera__acciones">
+      <label class="tasa" id="moneda-tasa-etiqueta" hidden><span>por US$</span>
+        <input id="moneda-tasa" type="number" step="any" inputmode="decimal" aria-label="Tasa de cambio orientativa: unidades de moneda local por dólar" title="Tasa orientativa: edítela con la del día">
+      </label>
+      <div class="moneda" id="moneda-selector">
+        <button class="moneda__boton" id="moneda-select" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Moneda">
+          <span class="moneda__bandera" id="moneda-bandera"></span><span id="moneda-texto">USD</span>
+          <svg class="moneda__flecha" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         </button>
-        <button class="boton-tema" id="boton-tema" aria-label="Cambiar entre modo claro y oscuro" title="Modo claro / oscuro">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
-        </button>
+        <div class="moneda__lista" id="moneda-lista" role="listbox" aria-label="Moneda y país"></div>
       </div>
-      <div class="cabecera__controles">
-        <div class="moneda" id="moneda-selector">
-          <button class="moneda__boton" id="moneda-select" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Seleccionar país y moneda">
-            <span class="moneda__bandera" id="moneda-bandera"></span>
-            <span class="moneda__texto" id="moneda-texto">Estados Unidos · USD</span>
-            <svg class="moneda__flecha" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          </button>
-          <div class="moneda__lista" id="moneda-lista" role="listbox"></div>
-        </div>
-        <input id="moneda-tasa" class="moneda-tasa" type="number" step="any" inputmode="decimal"
-               title="Tipo de cambio orientativo (unidades de moneda local por USD)" hidden>
-      </div>
+      <button class="boton-icono" id="boton-tema" type="button" aria-pressed="false" aria-label="Modo oscuro" title="Modo claro u oscuro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
     </div>
   </header>
 
+  <nav class="tabbar" id="tabbar" aria-label="Módulos de fórmulas" hidden></nav>
   <main class="contenido" id="contenido"></main>
 
-  <nav class="tabbar" id="tabbar" aria-label="Módulos de la calculadora"></nav>
+  <aside class="hoja" id="hoja-instalar" aria-labelledby="instalar-titulo">
+    <p class="hoja__titulo" id="instalar-titulo">Llévela en el teléfono</p>
+    <p class="hoja__texto" id="instalar-texto"></p>
+    <div class="hoja__acciones">
+      <button class="boton boton--secundario" id="boton-ahora-no" type="button">Ahora no</button>
+      <button class="boton" id="boton-instalar" type="button">Instalar</button>
+    </div>
+  </aside>
 
-  <!-- Superposición: instalación en Android (botón obligatorio) -->
-  <div class="superposicion" id="superposicion-instalar">
+  <div class="superposicion" id="modal-proyecto" role="dialog" aria-modal="true" aria-labelledby="proyecto-titulo">
     <div class="panel">
-      <div class="panel__icono">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 3v12"/><path d="M6 9l6 6 6-6"/>
-          <path d="M4 20h16"/>
-        </svg>
+      <p class="panel__titulo" id="proyecto-titulo">Guardar proyecto</p>
+      <p class="panel__texto">Guarda todos los valores de las fórmulas en este dispositivo, sin cuenta y sin nube.</p>
+      <input class="texto" id="proyecto-nombre" type="text" placeholder="Por ejemplo: Familia Gómez, Envigado" autocomplete="off" aria-label="Nombre del proyecto">
+      <div class="hoja__acciones">
+        <button class="boton boton--secundario" id="proyecto-cancelar" type="button">Cancelar</button>
+        <button class="boton" id="proyecto-confirmar" type="button">Guardar</button>
       </div>
-      <div class="panel__titulo">Instala la calculadora</div>
-      <div class="panel__texto">Para usar la app, instálala en tu teléfono. Quedará en tu pantalla de inicio y funcionará sin conexión.</div>
-      <button class="boton" id="boton-instalar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 3v12"/><path d="M6 9l6 6 6-6"/><path d="M4 20h16"/>
-        </svg>
-        Instalar app
-      </button>
-      <button class="boton boton--secundario" id="boton-continuar-web">Continuar en el navegador</button>
     </div>
   </div>
 
-  <!-- Superposición: instrucciones de instalación en iOS -->
-  <div class="superposicion" id="superposicion-ios">
-    <div class="panel">
-      <div class="panel__icono">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="6" y="3" width="12" height="18" rx="2"/><path d="M10 18h4"/>
-        </svg>
-      </div>
-      <div class="panel__titulo">Instala la calculadora en tu iPhone</div>
-      <div class="panel__texto">En iOS la app se agrega a la pantalla de inicio desde Safari. Sigue estos pasos:</div>
-      <div class="paso"><span class="paso__num">1</span><div class="paso__cuerpo">Abre esta página en <strong>Safari</strong> (no en otra app).</div></div>
-      <div class="paso"><span class="paso__num">2</span><div class="paso__cuerpo">Toca el botón <strong>Compartir</strong> (el cuadrado con flecha hacia arriba).</div></div>
-      <div class="paso"><span class="paso__num">3</span><div class="paso__cuerpo">Elige <strong>«Agregar a pantalla de inicio»</strong>.</div></div>
-      <div class="paso"><span class="paso__num">4</span><div class="paso__cuerpo">Toca <strong>«Agregar»</strong>. La app queda instalada y funciona sin conexión.</div></div>
-      <button class="boton boton--secundario" id="boton-cerrar-ios">Entendido</button>
-    </div>
-  </div>
-
-  <!-- Modal: guardar proyecto (reemplaza al diálogo nativo del navegador) -->
-  <div class="superposicion" id="modal-proyecto">
-    <div class="panel">
-      <div class="panel__icono">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 6a1 1 0 0 1 1-1h5l2 2h8a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>
-        </svg>
-      </div>
-      <div class="panel__titulo">Guardar proyecto</div>
-      <div class="panel__texto">Guarda una copia de todos los valores que has ingresado en este dispositivo. No sale de tu teléfono: funciona sin cuenta y sin nube.</div>
-      <input class="campo__entrada modal__entrada" id="proyecto-nombre" type="text" placeholder="Nombre del proyecto" autocomplete="off">
-      <button class="boton modal__boton" id="proyecto-confirmar">Guardar</button>
-      <button class="boton boton--secundario modal__boton" id="proyecto-cancelar">Cancelar</button>
-    </div>
-  </div>
-
+  <noscript><p style="padding:16px">La calculadora necesita JavaScript activado.</p></noscript>
+  <script src="./js/motor.js"></script>
   <script src="./js/formulas.js"></script>
+  <script src="./js/graficos.js"></script>
   <script src="./js/herramientas-pro.js"></script>
   <script src="./js/localizacion.js"></script>
   <script src="./js/banderas.js"></script>
   <script src="./js/almacen.js"></script>
   <script src="./js/venta.js"></script>
+  <script src="./js/qr.js"></script>
   <script src="./js/examen.js"></script>
   <script src="./js/app.js"></script>
 </body>

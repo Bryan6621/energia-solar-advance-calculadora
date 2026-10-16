@@ -1,56 +1,59 @@
-/* app.js — Calculadora Solar Advance · hub de modos, pestañas, verificación,
-   herramientas Pro, certificación e instalación. JavaScript puro, sin
-   dependencias, sin emojis (solo SVG). */
+/* app.js — Calculadora Solar Advance: rutas, tarjetas de fórmula con operación
+   viva y gráfica en vivo, verificación contra el libro, modo Pro, proyectos,
+   moneda, tema e instalación. JavaScript puro, sin dependencias, sin emojis. */
 (function () {
   "use strict";
 
-  var FORMULAS = window.FORMULAS;
-  var PRESETS = window.PRESETS;
+  var FORMULAS = window.FORMULAS, MODULOS = window.MODULOS, PRESETS = window.PRESETS;
   var HERRAMIENTAS = window.HERRAMIENTAS_PRO || [];
+  var M = window.Motor;
+  var VERSION = "2.0.0";
 
+  /* ------------------------------------------------------------- iconos */
+  var TRAZOS = {
+    factura: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+    dimension: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>',
+    economia: '<path d="M4 19h16"/><path d="M6 15l4-4 3 3 5-6"/><path d="M15 8h3v3"/>',
+    finanzas: '<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9v.01M18 15v.01"/>',
+    autonomo: '<rect x="3" y="7" width="15" height="10" rx="2"/><path d="M21 11v2"/><path d="M7 10v4M10.5 10v4"/>',
+    tecnico: '<path d="M14.7 6.3a4.5 4.5 0 0 0-6 6L3 18l3 3 5.7-5.7a4.5 4.5 0 0 0 6-6L14 13l-3-3z"/>',
+    verificar: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',
+    educativo: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>',
+    pro: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    certificado: '<circle cx="12" cy="9" r="5"/><path d="M8.5 13.5L7 22l5-3 5 3-1.5-8.5"/>',
+    volver: '<path d="M15 18l-6-6 6-6"/>',
+    voz: '<path d="M3 10v4h4l5 5V5L7 10z"/><path d="M15 9a4 4 0 0 1 0 6"/>',
+    compartir: '<path d="M4 12v8h16v-8"/><path d="M12 4v12"/><path d="M8 8l4-4 4 4"/>',
+    copiar: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
+    reiniciar: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>',
+    casa: '<path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/>',
+    flecha: '<path d="M9 6l6 6-6 6"/>',
+    carpeta: '<path d="M3 6a1 1 0 0 1 1-1h5l2 2h8a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>',
+    asesor: '<path d="M12 3v6M12 15v6M5 12h14"/><circle cx="12" cy="12" r="3"/>',
+    simulador: '<path d="M4 19h16"/><path d="M4 15c4 0 6-8 10-8 2 0 4 2 6 2"/>',
+    lupa: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>'
+  };
   function icono(nombre) {
-    var d = {
-      factura: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h3"/>',
-      dimension: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M4.9 4.9l1.4 1.4"/><path d="M17.7 17.7l1.4 1.4"/><path d="M19.1 4.9l-1.4 1.4"/><path d="M6.3 17.7l-1.4 1.4"/>',
-      economia: '<circle cx="12" cy="12" r="9"/><path d="M12 7v10"/><path d="M15.5 9.5c0-1.2-1.6-2-3.5-2s-3.5.8-3.5 2 1.6 2 3.5 2 3.5.8 3.5 2-1.6 2-3.5 2-3.5-.8-3.5-2"/>',
-      autonomo: '<rect x="3" y="7" width="15" height="10" rx="2"/><path d="M21 11v2"/><rect x="5" y="9" width="6" height="6" rx="1"/>',
-      tecnico: '<path d="M14.7 6.3a4.5 4.5 0 0 0-6 6L3 18l3 3 5.7-5.7a4.5 4.5 0 0 0 6-6L14 13l-3-3z"/>',
-      verificar: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',
-      educativo: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>',
-      pro: '<path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 7.7l5.4-.8z"/>',
-      certificado: '<circle cx="12" cy="9" r="5"/><path d="M8.5 13.5L7 22l5-3 5 3-1.5-8.5"/>',
-      volver: '<path d="M15 18l-6-6 6-6"/>',
-      voz: '<path d="M3 10v4h4l5 5V5L7 10z"/><path d="M15 9a4 4 0 0 1 0 6"/>',
-      compartir: '<path d="M4 12v8h16v-8"/><path d="M12 4v12"/><path d="M8 8l4-4 4 4"/>'
-    };
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (d[nombre] || "") + '</svg>';
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (TRAZOS[nombre] || "") + "</svg>";
   }
+  window.iconoAdvance = icono;
 
-  var MODULOS = [
-    { id: 1, nombre: "Factura", icono: "factura", titulo: "Diagnóstico de factura", intro: "El gancho de entrada: cuánto consume, cuánto cuesta no hacer nada y qué se sigue pagando." },
-    { id: 2, nombre: "Dimensión", icono: "dimension", titulo: "Dimensionador on-grid", intro: "Los 7 pasos del capítulo 14 para dimensionar el sistema conectado a red." },
-    { id: 3, nombre: "Economía", icono: "economia", titulo: "Economía", intro: "Ahorro, payback y LCOE del capítulo 4." },
-    { id: 4, nombre: "Autónomo", icono: "autonomo", titulo: "Sistema autónomo", intro: "El banco de baterías y el costo de la isla (Parte VIII)." },
-    { id: 5, nombre: "Técnico", icono: "tecnico", titulo: "Kit técnico del vendedor", intro: "Voc en frío, protecciones, calibre de cable y generador (caps. 12 y 15)." }
-  ];
-
-  var TOLERANCIAS = { 6: 0, 4: 1, 8: 0.1, 9: 0.1, 10: 0.002, 12: 0.1, 14: 0.1, 13: 0.03 };
-
+  /* ------------------------------------------------------------- moneda */
   var MONEDAS = [
-    { pais: "Estados Unidos (referencia)", codigo: "USD", simbolo: "$", tasa: 1 },
+    { pais: "Estados Unidos (referencia)", codigo: "USD", simbolo: "US$", tasa: 1 },
     { pais: "México", codigo: "MXN", simbolo: "$", tasa: 17.5 },
     { pais: "Guatemala", codigo: "GTQ", simbolo: "Q", tasa: 7.75 },
-    { pais: "El Salvador", codigo: "USD", simbolo: "$", tasa: 1 },
+    { pais: "El Salvador", codigo: "USD", simbolo: "US$", tasa: 1 },
     { pais: "Honduras", codigo: "HNL", simbolo: "L", tasa: 24.7 },
     { pais: "Nicaragua", codigo: "NIO", simbolo: "C$", tasa: 36.7 },
     { pais: "Costa Rica", codigo: "CRC", simbolo: "₡", tasa: 520 },
-    { pais: "Panamá", codigo: "USD", simbolo: "$", tasa: 1 },
+    { pais: "Panamá", codigo: "USD", simbolo: "US$", tasa: 1 },
     { pais: "Cuba", codigo: "CUP", simbolo: "$", tasa: 24 },
     { pais: "República Dominicana", codigo: "DOP", simbolo: "RD$", tasa: 59 },
-    { pais: "Puerto Rico", codigo: "USD", simbolo: "$", tasa: 1 },
+    { pais: "Puerto Rico", codigo: "USD", simbolo: "US$", tasa: 1 },
     { pais: "Colombia", codigo: "COP", simbolo: "$", tasa: 4100 },
     { pais: "Venezuela", codigo: "VES", simbolo: "Bs", tasa: 60 },
-    { pais: "Ecuador", codigo: "USD", simbolo: "$", tasa: 1 },
+    { pais: "Ecuador", codigo: "USD", simbolo: "US$", tasa: 1 },
     { pais: "Perú", codigo: "PEN", simbolo: "S/", tasa: 3.75 },
     { pais: "Bolivia", codigo: "BOB", simbolo: "Bs", tasa: 6.9 },
     { pais: "Chile", codigo: "CLP", simbolo: "$", tasa: 950 },
@@ -61,603 +64,601 @@
     { pais: "España", codigo: "EUR", simbolo: "€", tasa: 0.92 }
   ];
   var moneda = MONEDAS[0];
+  function esMonetaria(u) { return u.indexOf("USD") === 0; }
+  function unidadVisible(u) { return esMonetaria(u) ? u.replace("USD", moneda.codigo) : u; }
 
-  function esMonetaria(unidad) { return unidad.indexOf("USD") === 0; }
-
-  function unidadEtiqueta(unidad) {
-    if (esMonetaria(unidad) && moneda.codigo !== "USD") { return unidad.replace("USD", moneda.codigo); }
-    return unidad;
-  }
-
-  function formatearNumeroLocal(valor, decimales) {
-    var s = valor.toFixed(decimales).replace(".", ",");
-    var partes = s.split(",");
-    partes[0] = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    return partes.length > 1 ? partes[0] + "," + partes[1] : partes[0];
-  }
-
-  function formatearResultado(unidad, valor, formato) {
-    if (esMonetaria(unidad) && moneda.codigo !== "USD") {
-      var convertido = valor * moneda.tasa;
-      var decimales = moneda.tasa >= 100 ? 0 : 2;
-      return moneda.simbolo + " " + formatearNumeroLocal(convertido, decimales);
-    }
-    return formato(valor);
-  }
-
-  function unidadMostrada(unidad) {
-    if (esMonetaria(unidad) && moneda.codigo !== "USD") { return unidad.replace("USD", moneda.codigo); }
-    return unidad;
-  }
-
-  window.formatearMonedaDetalle = function (usd) {
-    if (moneda.codigo !== "USD") {
+  /* Contexto de formato que reciben fórmulas y gráficas (entradas en USD). */
+  var ctx = {
+    n: M.es,
+    m: function (usd, dec) {
       var v = usd * moneda.tasa;
-      return moneda.simbolo + " " + formatearNumeroLocal(v, moneda.tasa >= 100 ? 0 : 2);
+      var d = dec === undefined ? 0 : dec;
+      if (moneda.tasa >= 100) { d = Math.max(0, d - 2); }
+      return moneda.simbolo + " " + M.es(v, d);
     }
-    return "$ " + usd.toFixed(2);
   };
+  window.formatearMonedaDetalle = function (usd) { return ctx.m(usd, 2); };
+  window.ctxAdvance = ctx;
 
-  function leerEntrada(el) {
-    var v = parseFloat(el.value);
-    return isNaN(v) ? 0 : v;
-  }
+  /* ------------------------------------------------------------- utilidades */
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/ (%|USD\b|kWh\b|Wp\b)/g, "\u00A0$1"); }
+  function $(sel, raiz) { return (raiz || document).querySelector(sel); }
+  function $$(sel, raiz) { return Array.prototype.slice.call((raiz || document).querySelectorAll(sel)); }
 
   function toast(mensaje) {
     var t = document.createElement("div");
-    t.className = "toast";
-    t.textContent = mensaje;
+    t.className = "toast"; t.setAttribute("role", "status"); t.textContent = mensaje;
     document.body.appendChild(t);
-    setTimeout(function () { t.classList.add("visible"); }, 10);
-    setTimeout(function () {
-      t.classList.remove("visible");
-      setTimeout(function () { t.remove(); }, 300);
-    }, 2400);
+    requestAnimationFrame(function () { t.classList.add("visible"); });
+    setTimeout(function () { t.classList.remove("visible"); setTimeout(function () { t.remove(); }, 300); }, 2400);
+  }
+  window.toastAdvance = toast;
+
+  function copiar(texto, aviso) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(texto).then(function () { toast(aviso || "Copiado."); }, function () { toast("No se pudo copiar."); });
+    } else { toast("Este navegador no permite copiar."); }
+  }
+
+  function compartir(titulo, texto) {
+    if (navigator.share) { navigator.share({ title: titulo, text: texto }).catch(function () {}); }
+    else { copiar(texto, "Resultado copiado: péguelo donde quiera compartirlo."); }
+  }
+
+  /* ------------------------------------------------------------- campos */
+  function decimalesDe(paso) { var s = String(paso); return s.indexOf(".") < 0 ? 0 : s.split(".")[1].length; }
+
+  function campoHTML(c, valorUSD) {
+    var mon = esMonetaria(c.unidad), k = mon ? moneda.tasa : 1;
+    var v = (valorUSD !== undefined ? valorUSD : c.defecto) * k;
+    var paso = c.paso * (mon && k >= 100 ? Math.pow(10, Math.round(Math.log10(k))) : k);
+    var dec = mon ? (k >= 100 ? 0 : Math.max(decimalesDe(c.paso), 2)) : decimalesDe(c.paso);
+    var id = "c" + Math.random().toString(36).slice(2, 8);
+    return '<div class="campo"><label class="campo__etiqueta" for="' + id + '">' + esc(c.etiqueta) +
+      (c.orientativo ? ' <span class="campo__marca" title="Orientativo: verifique en PVGIS">orientativo</span>' : "") + "</label>" +
+      '<div class="campo__fila"><input class="campo__rango" type="range" tabindex="-1" aria-hidden="true" min="' + c.min * k + '" max="' + c.max * k + '" step="any" value="' + v + '">' +
+      '<span class="campo__caja"><input id="' + id + '" class="campo__entrada" type="number" inputmode="decimal" step="any" data-campo="' + c.clave + '"' +
+      (mon ? ' data-monetario="1"' : "") + ' data-dec="' + dec + '" value="' + Number(v.toFixed(Math.min(4, dec + 2))) + '">' +
+      '<span class="campo__unidad" data-unidad-base="' + esc(c.unidad) + '">' + esc(unidadVisible(c.unidad)) + "</span></span></div></div>";
   }
 
   function leerValores(tarjeta) {
-    var valores = {};
-    tarjeta.querySelectorAll("input[data-campo]").forEach(function (entrada) {
-      var v = leerEntrada(entrada);
-      if (entrada.hasAttribute("data-monetario") && moneda.codigo !== "USD") { v = v / moneda.tasa; }
-      valores[entrada.dataset.campo] = v;
+    var v = {};
+    $$("input[data-campo]", tarjeta).forEach(function (e) {
+      var x = parseFloat(String(e.value).replace(",", "."));
+      if (isNaN(x)) { x = 0; }
+      if (e.hasAttribute("data-monetario")) { x = x / moneda.tasa; }
+      v[e.dataset.campo] = x;
     });
-    return valores;
+    return v;
   }
 
-  function formulasDelModulo(id) { return FORMULAS.filter(function (f) { return f.modulo === id; }); }
-
-  function campoHTML(campo) {
-    var monetario = esMonetaria(campo.unidad);
-    var valor = monetario && moneda.codigo !== "USD" ? campo.defecto * moneda.tasa : campo.defecto;
-    return '<div class="campo"><label class="campo__etiqueta">' + campo.etiqueta +
-      ' <span class="campo__unidad" data-campo-unidad="' + campo.unidad + '">' + unidadEtiqueta(campo.unidad) + '</span></label>' +
-      '<input class="campo__entrada" type="number" step="any" data-campo="' + campo.clave + '"' +
-      (monetario ? ' data-monetario="1"' : "") + ' value="' + valor + '"></div>';
-  }
-
-  function construirTarjeta(f) {
-    var campos = f.inputs.map(campoHTML).join("");
-    return '<article class="tarjeta" data-fid="' + f.id + '">' +
-      '<div class="tarjeta__cabecera"><span class="tarjeta__indice">' + f.id + '</span><span class="tarjeta__nombre">' + f.nombre + '</span>' +
-      '<div class="tarjeta__util"><button class="util util-deriv" aria-label="Ver derivación">=</button>' +
-      '<button class="util util-voz" aria-label="Leer en voz alta">' + icono("voz") + '</button>' +
-      '<button class="util util-compartir" aria-label="Compartir">' + icono("compartir") + '</button></div></div>' +
-      '<div class="tarjeta__formula">' + f.expresion + '</div>' + campos +
-      '<div class="resultado"><div><div class="resultado__etiqueta">Resultado</div>' +
-      '<div class="resultado__valor" data-resultado>—</div></div>' +
-      '<div class="resultado__unidad" data-unidad>' + unidadEtiqueta(f.unidad) + '</div></div>' +
-      '<div class="tarjeta__derivacion" data-derivacion></div>' +
-      (f.nota ? '<div class="nota">' + f.nota + '</div>' : "") +
-      (f.orientativo ? '<span class="nota--orientativo">orientativo — verificar en PVGIS</span>' : "") +
-      '</article>';
-  }
-
-  function construirTarjetaPro(h) {
-    var campos = h.inputs.map(campoHTML).join("");
-    return '<article class="tarjeta" data-pid="' + h.id + '">' +
-      '<div class="tarjeta__cabecera"><span class="tarjeta__indice">P</span>' +
-      '<span class="tarjeta__nombre">' + h.nombre + '</span>' +
-      '<button class="tarjeta__ayuda" type="button" aria-label="Qué es ' + h.nombre + '">?</button></div>' +
-      '<div class="tarjeta__explicacion">' + h.explicacion + '</div>' +
-      '<div class="tarjeta__formula">' + h.expresion + '</div>' + campos +
-      '<div class="resultado"><div><div class="resultado__etiqueta">Resultado</div>' +
-      '<div class="resultado__valor" data-resultado>—</div></div>' +
-      '<div class="resultado__unidad" data-unidad>' + unidadEtiqueta(h.unidad) + '</div></div>' +
-      '</article>';
-  }
-
-  function derivacionTexto(entradas, valores, expresion, resultado, unidad) {
-    var lineas = entradas.map(function (c) {
-      return c.etiqueta + " = " + valores[c.clave] + " " + c.unidad;
+  function cablearCampos(tarjeta, alCambiar) {
+    $$(".campo", tarjeta).forEach(function (campo) {
+      var rango = $(".campo__rango", campo), num = $(".campo__entrada", campo);
+      rango.addEventListener("input", function () {
+        var d = +num.dataset.dec, paso = Math.pow(10, -d);
+        num.value = (Math.round(rango.value / paso) * paso).toFixed(d);
+        alCambiar();
+      });
+      num.addEventListener("input", function () {
+        var x = parseFloat(num.value);
+        if (!isNaN(x)) { rango.value = x; }
+        alCambiar();
+      });
     });
-    return "Expresión: " + expresion + "\nEntradas:\n· " + lineas.join("\n· ") +
-      "\nResultado: " + resultado + " " + unidad;
+  }
+
+  function fijarValores(tarjeta, valoresUSD) {
+    $$("input[data-campo]", tarjeta).forEach(function (e) {
+      if (valoresUSD[e.dataset.campo] === undefined) { return; }
+      var v = valoresUSD[e.dataset.campo] * (e.hasAttribute("data-monetario") ? moneda.tasa : 1);
+      e.value = Number(v.toFixed(Math.min(4, +e.dataset.dec + 2)));
+      var r = $(".campo__rango", e.closest(".campo"));
+      if (r) { r.value = v; }
+    });
+  }
+
+  /* ------------------------------------------------------------- tarjeta de fórmula */
+  /* Fórmulas con muchos supuestos: los cuatro principales a la vista, el resto
+     plegado (sigue entrando en la cuenta y en la gráfica). */
+  function entradasHTML(inputs) {
+    if (inputs.length <= 6) { return inputs.map(function (c) { return campoHTML(c); }).join(""); }
+    var resto = inputs.slice(4);
+    return inputs.slice(0, 4).map(function (c) { return campoHTML(c); }).join("") +
+      '<details class="supuestos"><summary>Más supuestos <span>' + resto.map(function (c) { return c.etiqueta.split(" (")[0].toLowerCase(); }).join(", ") + "</span></summary>" +
+      '<div class="supuestos__campos">' + resto.map(function (c) { return campoHTML(c); }).join("") + "</div></details>";
+  }
+
+  function porClave(clave) { return FORMULAS.filter(function (f) { return f.clave === clave; })[0]; }
+
+  function tarjetaHTML(f, orden) {
+    return '<article class="formula" id="f-' + f.clave + '" data-formula="' + f.clave + '">' +
+      '<header class="formula__cabecera"><span class="formula__orden" aria-hidden="true">' + orden + "</span>" +
+      '<div class="formula__titulos"><h3 class="formula__nombre">' + esc(f.nombre) + "</h3>" +
+      '<p class="formula__pregunta">' + esc(f.pregunta) + "</p></div>" +
+      '<span class="formula__capitulo">' + esc(f.capitulo) + "</span></header>" +
+      '<p class="formula__expresion">' + esc(f.expresion) + "</p>" +
+      '<div class="formula__cuerpo"><div class="formula__entradas">' + entradasHTML(f.inputs) +
+      '<button class="enlace formula__restablecer" type="button">' + icono("reiniciar") + "Valores del libro</button></div>" +
+      '<div class="formula__salidas"><div class="resultado"><span class="resultado__valor" data-resultado>—</span>' +
+      '<span class="resultado__unidad" data-unidad>' + esc(unidadVisible(f.unidad)) + "</span></div>" +
+      '<p class="operacion" data-operacion aria-live="polite"></p>' +
+      '<dl class="extras" data-extras></dl>' +
+      '<div class="grafico" data-grafico></div></div></div>' +
+      (f.nota ? '<p class="formula__nota">' + esc(f.nota) + "</p>" : "") +
+      '<footer class="formula__pie"><button class="boton-icono" data-accion="copiar" aria-label="Copiar la operación" title="Copiar la operación">' + icono("copiar") + "</button>" +
+      '<button class="boton-icono" data-accion="voz" aria-label="Leer en voz alta" title="Leer en voz alta">' + icono("voz") + "</button>" +
+      '<button class="boton-icono" data-accion="compartir" aria-label="Compartir el resultado" title="Compartir el resultado">' + icono("compartir") + "</button></footer>" +
+      "</article>";
+  }
+
+  function formatoPrincipal(f, r) {
+    if (!isFinite(r)) { return "—"; }
+    if (esMonetaria(f.unidad)) { return ctx.m(r, f.decimales).replace(moneda.simbolo + " ", ""); }
+    return M.es(r, f.decimales);
   }
 
   function recalcular(tarjeta) {
-    var valores = leerValores(tarjeta);
-    var el = tarjeta.querySelector("[data-resultado]");
-    var unidadEl = tarjeta.querySelector("[data-unidad]");
-    var derivEl = tarjeta.querySelector("[data-derivacion]");
-    if (tarjeta.dataset.fid) {
-      var f = FORMULAS.find(function (x) { return String(x.id) === tarjeta.dataset.fid; });
-      if (!f) { return; }
-      var r = f.calculo(valores);
-      el.textContent = isFinite(r) ? formatearResultado(f.unidad, r, f.formato) : "—";
-      if (unidadEl) { unidadEl.textContent = unidadMostrada(f.unidad); }
-      if (derivEl) { derivEl.textContent = derivacionTexto(f.inputs, valores, f.expresion, f.formato(r), f.unidad); }
-    } else if (tarjeta.dataset.pid) {
-      var h = HERRAMIENTAS.find(function (x) { return x.id === tarjeta.dataset.pid; });
-      if (!h) { return; }
-      var r2 = h.calculo(valores);
-      if (h.esRango) {
-        el.textContent = r2.nmin + " – " + r2.nmax;
-        unidadEl.textContent = h.unidad + " (Voc frío " + r2.vocFrio.toFixed(1) + " V · Vmp calor " + r2.vmpCalor.toFixed(1) + " V)";
-      } else {
-        el.textContent = isFinite(r2) ? formatearResultado(h.unidad, r2, h.formato) : "—";
-        if (unidadEl) { unidadEl.textContent = unidadMostrada(h.unidad); }
-        if (derivEl) { derivEl.textContent = derivacionTexto(h.inputs, valores, h.expresion, h.formato(r2), h.unidad); }
-      }
-    }
+    var f = porClave(tarjeta.dataset.formula);
+    var v = leerValores(tarjeta), r = f.calculo(v);
+    $("[data-resultado]", tarjeta).textContent = formatoPrincipal(f, r);
+    $("[data-unidad]", tarjeta).textContent = esMonetaria(f.unidad) ? unidadVisible(f.unidad) : f.unidad;
+    $("[data-operacion]", tarjeta).textContent = isFinite(r) ? f.operacion(v, r, ctx) : "Revise los datos: la operación no tiene solución con estos valores.";
+    var ex = f.extras && isFinite(r) ? f.extras(v, r, ctx) : [];
+    $("[data-extras]", tarjeta).innerHTML = ex.map(function (x) {
+      return "<div><dt>" + esc(x.etiqueta) + "</dt><dd>" + esc(x.valor) + (x.unidad ? " " + esc(x.unidad) : "") + (x.nota ? '<span class="extras__nota">' + esc(x.nota) + "</span>" : "") + "</dd></div>";
+    }).join("");
+    var g = $("[data-grafico]", tarjeta);
+    var dib = function () { if (isFinite(r)) { window.Graficos.dibujar(g, f.grafico(v, r, ctx), ctx); } else { g.hidden = true; } };
+    if (!g._vigilado) { window.Graficos.vigilar(g, function () { recalcular(tarjeta); }); g._vigilado = true; }
+    if (tarjeta._raf) { cancelAnimationFrame(tarjeta._raf); }
+    tarjeta._raf = requestAnimationFrame(dib);
+    tarjeta._ultimo = { f: f, v: v, r: r };
   }
 
-  function recalcularTodo() { document.querySelectorAll(".tarjeta").forEach(recalcular); }
-
-  function cablearUtilidades() {
-    document.querySelectorAll(".tarjeta").forEach(function (tarjeta) {
-      var deriv = tarjeta.querySelector(".util-deriv");
-      var voz = tarjeta.querySelector(".util-voz");
-      var compartir = tarjeta.querySelector(".util-compartir");
-      var nombre = tarjeta.querySelector(".tarjeta__nombre").textContent;
-      if (deriv) {
-        deriv.addEventListener("click", function () {
-          var d = tarjeta.querySelector("[data-derivacion]");
-          d.classList.toggle("visible");
-          deriv.classList.toggle("activo", d.classList.contains("visible"));
-        });
-      }
-      if (voz && "speechSynthesis" in window) {
-        voz.addEventListener("click", function () {
-          var texto = nombre + ". " + (tarjeta.querySelector(".tarjeta__formula") ? tarjeta.querySelector(".tarjeta__formula").textContent : "") +
-            ". Resultado: " + tarjeta.querySelector("[data-resultado]").textContent + " " + tarjeta.querySelector("[data-unidad]").textContent;
+  function cablearTarjeta(tarjeta) {
+    var f = porClave(tarjeta.dataset.formula);
+    cablearCampos(tarjeta, function () { recalcular(tarjeta); });
+    $(".formula__restablecer", tarjeta).addEventListener("click", function () {
+      var base = {}; f.inputs.forEach(function (c) { base[c.clave] = c.defecto; });
+      fijarValores(tarjeta, base); recalcular(tarjeta);
+    });
+    $$("[data-accion]", tarjeta).forEach(function (b) {
+      b.addEventListener("click", function () {
+        var u = tarjeta._ultimo, texto = f.nombre + ": " + $("[data-operacion]", tarjeta).textContent;
+        if (b.dataset.accion === "copiar") { copiar(texto, "Operación copiada."); }
+        else if (b.dataset.accion === "compartir") { compartir("Calculadora Solar Advance", texto + " — Calculadora Solar Advance"); }
+        else if (b.dataset.accion === "voz") {
+          if (!("speechSynthesis" in window)) { toast("Este dispositivo no tiene lectura en voz alta."); return; }
           window.speechSynthesis.cancel();
-          var u = new SpeechSynthesisUtterance(texto);
-          u.lang = "es-ES";
-          window.speechSynthesis.speak(u);
-        });
-      }
-      if (compartir) {
-        compartir.addEventListener("click", function () {
-          var texto = nombre + " = " + tarjeta.querySelector("[data-resultado]").textContent + " " + tarjeta.querySelector("[data-unidad]").textContent + " — Calculadora Solar Advance";
-          if (navigator.share) {
-            navigator.share({ title: "Calculadora Solar Advance", text: texto }).catch(function () {});
-          } else if (navigator.clipboard) {
-            navigator.clipboard.writeText(texto).then(function () { window.alert("Copiado al portapapeles"); });
-          } else {
-            window.prompt("Copia el resultado:", texto);
-          }
-        });
-      }
-    });
-  }
-
-  function construirVista(modulo) {
-    return '<section class="vista" data-modulo="' + modulo.id + '">' +
-      '<h2 class="vista__titulo">' + modulo.titulo + '</h2><p class="vista__intro">' + modulo.intro + '</p>' +
-      formulasDelModulo(modulo.id).map(construirTarjeta).join("") + '</section>';
-  }
-
-  function construirVistaVerificacion() {
-    return '<section class="vista" data-modulo="verificacion">' +
-      '<h2 class="vista__titulo">Modo verificación</h2>' +
-      '<p class="vista__intro">Carga el caso del libro y la app devuelve los mismos números: la calculadora como examen y como vendedor silencioso. La comparación se hace en USD, la moneda del libro.</p>' +
-      '<div class="presets"><button class="preset" data-preset="torres">Caso Torres (on-grid)</button>' +
-      '<button class="preset" data-preset="alisos">Caso Los Alisos (isla)</button></div>' +
-      '<div id="panel-verificacion"></div></section>';
-  }
-
-  function aplicarPreset(clave) {
-    var p = PRESETS[clave];
-    if (!p) { return; }
-    Object.keys(p.valores).forEach(function (fid) {
-      var valores = p.valores[fid];
-      var tarjeta = document.querySelector('.tarjeta[data-fid="' + fid + '"]');
-      if (!tarjeta) { return; }
-      tarjeta.querySelectorAll("input[data-campo]").forEach(function (entrada) {
-        if (valores[entrada.dataset.campo] !== undefined) {
-          var v = valores[entrada.dataset.campo];
-          if (entrada.hasAttribute("data-monetario") && moneda.codigo !== "USD") { v = v * moneda.tasa; }
-          entrada.value = v;
+          var hablar = new SpeechSynthesisUtterance(f.nombre + ". " + $("[data-resultado]", tarjeta).textContent + " " + $("[data-unidad]", tarjeta).textContent + ". " + f.pregunta);
+          hablar.lang = "es-ES"; window.speechSynthesis.speak(hablar);
         }
+        return u;
       });
-      recalcular(tarjeta);
     });
+    recalcular(tarjeta);
+  }
+
+  function recalcularTodo() { $$(".formula").forEach(recalcular); $$(".herramienta").forEach(recalcularPro); }
+
+  /* ------------------------------------------------------------- vistas */
+  var contenido, tabbar;
+
+  function vistaModulo(m) {
+    var lista = FORMULAS.filter(function (f) { return f.modulo === m.id; });
+    return '<section class="vista" data-vista="' + m.id + '" aria-labelledby="t-' + m.id + '">' +
+      '<header class="vista__cabecera"><h2 class="vista__titulo" id="t-' + m.id + '">' + esc(m.titulo) + "</h2>" +
+      '<p class="vista__intro">' + esc(m.intro) + "</p></header>" +
+      (m.id === 2 ? ubicacionHTML() : "") +
+      lista.map(function (f, i) { return tarjetaHTML(f, i + 1); }).join("") + "</section>";
+  }
+
+  function ubicacionHTML() {
+    if (!window.CIUDADES) { return ""; }
+    return '<div class="ubicacion"><label class="campo__etiqueta" for="ubicacion">Tomar las HSP del peor mes de una ciudad de referencia</label>' +
+      '<select id="ubicacion" class="selector"><option value="">Elegir ciudad</option>' + window.CIUDADES.map(function (c) {
+        return '<option value="' + c.hsp + '">' + esc(c.ciudad + ", " + c.pais) + " · " + M.es(c.hsp, 1) + " HSP</option>";
+      }).join("") + '</select><p class="ubicacion__nota">Valores orientativos. Confírmelos en PVGIS antes de firmar una propuesta.</p></div>';
+  }
+
+  function vistaVerificacion() {
+    return '<section class="vista" data-vista="verificar" aria-labelledby="t-ver">' +
+      '<header class="vista__cabecera"><h2 class="vista__titulo" id="t-ver">Verificar contra el libro</h2>' +
+      '<p class="vista__intro">Elija un caso del libro: la calculadora rehace sus cuentas y las compara, cifra por cifra, con las fichas del Anexo G. La comparación se hace en dólares, la moneda del libro.</p></header>' +
+      '<div class="casos" role="tablist">' + Object.keys(PRESETS).map(function (k) {
+        var p = PRESETS[k];
+        return '<button class="caso" role="tab" data-caso="' + k + '"><span class="caso__nombre">' + esc(p.nombre) + '</span><span class="caso__tipo">' + esc(p.tipo) + "</span></button>";
+      }).join("") + "</div>" +
+      '<div id="panel-verificacion" class="verificacion"></div></section>';
+  }
+
+  function verificar(clave) {
+    var p = PRESETS[clave], ok = 0;
+    var usd = { m: function (x, d) { return "US$ " + M.es(x, d || 0); }, n: M.es };
     var filas = p.esperados.map(function (e) {
-      var formula = FORMULAS.find(function (x) { return x.id === e.id; });
-      var calculado = formula.calculo(p.valores[e.id]);
-      var esperado = parseFloat(e.valor);
-      var tol = TOLERANCIAS[e.id] !== undefined ? TOLERANCIAS[e.id] : 0.05;
-      var ok = Math.abs(calculado - esperado) <= tol;
-      return '<div class="fila-verificacion"><span class="fila-verificacion__concepto">' + e.concepto + '</span>' +
-        '<span class="fila-verificacion__valores"><span class="fila-verificacion__ok">' + formula.formato(calculado) + '</span> ' +
-        '<span class="fila-verificacion__esperado">(libro: ' + e.valor + ')</span></span>' +
-        '<span class="sello ' + (ok ? 'sello--ok' : 'sello--revisar') + '">' + (ok ? icono("verificar") + "coincide" : "revisar") + '</span></div>';
+      var r = window.evaluarEsperado(p, e, usd);
+      if (r.ok) { ok++; }
+      return '<tr class="' + (r.ok ? "coincide" : "difiere") + '"><th scope="row">' + esc(e.concepto) +
+        '<a class="verificacion__ir" href="#/educativo/' + r.formula.modulo + "/" + r.formula.clave + '">Abrir «' + esc(r.formula.nombre) + "»</a></th>" +
+        "<td>" + M.es(r.obtenido, e.decimales) + "</td><td>" + M.es(e.valor, e.decimales) + "</td>" +
+        '<td class="verificacion__estado">' + (r.ok ? icono("verificar") + '<span class="sr">coincide</span>' : '<span class="difiere__marca">revisar</span>') + "</td></tr>";
     }).join("");
-    document.getElementById("panel-verificacion").innerHTML =
-      '<div class="tarjeta"><div class="tarjeta__cabecera"><span class="tarjeta__indice">' + icono("verificar") + '</span>' +
-      '<span class="tarjeta__nombre">Resultado del ' + p.nombre + '</span></div>' + filas + '</div>';
-    document.querySelectorAll(".preset").forEach(function (b) { b.classList.remove("activo"); });
-    document.querySelector('.preset[data-preset="' + clave + '"]').classList.add("activo");
-  }
-
-  var contenido = null, tabbar = null;
-
-  function mostrarVista(id) {
-    document.querySelectorAll(".vista").forEach(function (v) { v.classList.remove("activa"); });
-    document.querySelectorAll(".tab").forEach(function (t) { t.classList.remove("activo"); });
-    var vista = document.querySelector('.vista[data-modulo="' + id + '"]');
-    if (vista) { vista.classList.add("activa"); }
-    var tab = document.querySelector('.tab[data-tab="' + id + '"]');
-    if (tab) { tab.classList.add("activo"); }
-  }
-
-  function botonVolver() { return '<button class="boton-volver" id="boton-volver">' + icono("volver") + ' Modos</button>'; }
-
-  function mostrarHub() {
-    tabbar.style.display = "none";
-    contenido.innerHTML =
-      '<div class="hub">' +
-      '<div class="hub__tarjeta" data-modo="educativo"><div class="hub__icono">' + icono("educativo") + '</div>' +
-      '<div><div class="hub__titulo">Modo educativo</div><div class="hub__texto">Las 17 fórmulas del capítulo 31 y el modo verificación con los casos Torres y Los Alisos.</div></div></div>' +
-      '<div class="hub__tarjeta" data-modo="pro"><div class="hub__icono hub__icono--pro">' + icono("pro") + '</div>' +
-      '<div><div class="hub__titulo">Advance · Pro</div><div class="hub__texto">Herramientas profesionales de análisis: temperatura de celda, PR real, VAN, TIR, ventana MPPT y más.</div></div></div>' +
-      '<div class="hub__tarjeta" data-modo="certificado"><div class="hub__icono hub__icono--cert">' + icono("certificado") + '</div>' +
-      '<div><div class="hub__titulo">Certificate</div><div class="hub__texto">Examen de 20 preguntas y diploma de Analista de Sistemas Fotovoltaicos — Multienfoque.</div></div></div>' +
-      '</div>';
-    contenido.querySelectorAll(".hub__tarjeta").forEach(function (t) {
-      t.addEventListener("click", function () { enrutar("#/" + t.dataset.modo); });
-    });
-  }
-
-  function mostrarEducativo() {
-    tabbar.style.display = "flex";
-    contenido.innerHTML = MODULOS.map(construirVista).join("") + construirVistaVerificacion();
-    mostrarVista(1);
-    document.querySelectorAll(".tab").forEach(function (t) {
-      t.addEventListener("click", function () { mostrarVista(t.dataset.tab); });
-    });
-    contenido.querySelectorAll(".tarjeta").forEach(function (tarjeta) {
-      tarjeta.querySelectorAll("input[data-campo]").forEach(function (entrada) {
-        entrada.addEventListener("input", function () { recalcular(tarjeta); });
+    $("#panel-verificacion").innerHTML =
+      '<div class="verificacion__resumen"><p class="verificacion__marcador"><span>' + ok + "</span> de " + p.esperados.length + " cifras coinciden con el libro</p>" +
+      '<p class="verificacion__caso">' + esc(p.resumen) + " · ficha única en el " + esc(p.ficha) + "</p></div>" +
+      '<div class="tabla-envoltura"><table class="tabla-verificacion"><thead><tr><th scope="col">Cifra</th><th scope="col">Calculadora</th><th scope="col">Libro</th><th scope="col"><span class="sr">Estado</span></th></tr></thead><tbody>' + filas + "</tbody></table></div>" +
+      (p.aviso ? '<p class="formula__nota">' + esc(p.aviso) + "</p>" : "") +
+      '<button class="boton" id="cargar-caso">Cargar el caso en todas las fórmulas</button>';
+    $$(".caso").forEach(function (b) { b.setAttribute("aria-selected", b.dataset.caso === clave ? "true" : "false"); });
+    $("#cargar-caso").addEventListener("click", function () {
+      Object.keys(p.valores).forEach(function (k) {
+        var t = $('.formula[data-formula="' + k + '"]');
+        if (t) { fijarValores(t, p.valores[k]); recalcular(t); }
       });
-      recalcular(tarjeta);
-    });
-    contenido.querySelectorAll(".preset").forEach(function (b) {
-      b.addEventListener("click", function () { aplicarPreset(b.dataset.preset); });
-    });
-    cablearUtilidades();
-    montarUbicacion();
-    if (window.Almacen) { montarProyectos(); }
-  }
-
-  function mostrarPro() {
-    tabbar.style.display = "none";
-    contenido.innerHTML = botonVolver() +
-      '<h2 class="vista__titulo">Advance · Pro</h2>' +
-      '<p class="vista__intro">Herramientas profesionales. Toca el signo «?» de cada una para saber para qué sirve.</p>' +
-      '<div class="hub">' +
-      '<div class="hub__tarjeta" data-venta="asesor"><div class="hub__icono">' + icono("certificado") + '</div>' +
-      '<div><div class="hub__titulo">Asesor de decisión</div><div class="hub__texto">Responde tres preguntas y recibe la recomendación del libro.</div></div></div>' +
-      '<div class="hub__tarjeta" data-venta="simulador"><div class="hub__icono hub__icono--pro">' + icono("economia") + '</div>' +
-      '<div><div class="hub__titulo">Simulador antes / después</div><div class="hub__texto">Curva año a año con el punto exacto de payback.</div></div></div>' +
-      '<div class="hub__tarjeta" data-venta="detective"><div class="hub__icono hub__icono--pro">' + icono("factura") + '</div>' +
-      '<div><div class="hub__titulo">Detective de facturas</div><div class="hub__texto">Reconstruye las 5 zonas y detecta anomalías en tu factura.</div></div></div>' +
-      '</div>' +
-      '<p class="vista__intro" style="margin-top:14px">Herramientas de cálculo:</p>' +
-      HERRAMIENTAS.map(construirTarjetaPro).join("");
-    contenido.querySelectorAll("[data-venta]").forEach(function (t) {
-      t.addEventListener("click", function () { enrutar("#/" + t.dataset.venta); });
-    });
-    document.getElementById("boton-volver").addEventListener("click", function () { enrutar("#/"); });
-    contenido.querySelectorAll(".tarjeta").forEach(function (tarjeta) {
-      tarjeta.querySelectorAll("input[data-campo]").forEach(function (entrada) {
-        entrada.addEventListener("input", function () { recalcular(tarjeta); });
-      });
-      tarjeta.querySelector(".tarjeta__ayuda").addEventListener("click", function () {
-        tarjeta.querySelector(".tarjeta__explicacion").classList.toggle("visible");
-      });
-      recalcular(tarjeta);
-    });
-    cablearUtilidades();
-  }
-
-  function montarUbicacion() {
-    var vista = document.querySelector('.vista[data-modulo="2"]');
-    if (!vista || !window.CIUDADES) { return; }
-    var opciones = window.CIUDADES.map(function (c) {
-      return '<option value="' + c.hsp + '">' + c.ciudad + " · " + c.pais + ' (' + c.hsp + ' HSP)</option>';
-    }).join("");
-    var card = document.createElement("div");
-    card.className = "tarjeta ubicacion";
-    card.innerHTML =
-      '<div class="tarjeta__cabecera"><span class="tarjeta__indice">U</span><span class="tarjeta__nombre">Ubicación de referencia</span></div>' +
-      '<div class="campo"><label class="campo__etiqueta">Ciudad (HSP orientativo)</label>' +
-      '<select class="campo__entrada" id="ubicacion-ciudad">' + opciones + '</select></div>' +
-      '<span class="nota--orientativo">orientativo — verificar en PVGIS</span>';
-    vista.insertBefore(card, vista.firstChild);
-    card.querySelector("#ubicacion-ciudad").addEventListener("change", function () {
-      var hsp = parseFloat(card.querySelector("#ubicacion-ciudad").value);
-      [4, 5].forEach(function (fid) {
-        var t = document.querySelector('.tarjeta[data-fid="' + fid + '"]');
-        if (t) {
-          var inpHsp = t.querySelector('input[data-campo="hsp"]');
-          if (inpHsp) { inpHsp.value = hsp; }
-          recalcular(t);
-        }
-      });
+      toast(p.nombre + " cargado en " + Object.keys(p.valores).length + " fórmulas.");
     });
   }
 
-  var modalProyectoListo = false;
+  function mostrarVista(id, foco) {
+    $$(".vista").forEach(function (v) { v.classList.toggle("activa", v.dataset.vista === String(id)); });
+    $$(".tab").forEach(function (t) { t.setAttribute("aria-current", t.dataset.tab === String(id) ? "page" : "false"); });
+    var activa = $('.vista[data-vista="' + id + '"]');
+    if (activa) { $$(".formula", activa).forEach(recalcular); }
+    if (foco) {
+      var t = document.getElementById("f-" + foco);
+      if (t) { setTimeout(function () { t.scrollIntoView({ behavior: "smooth", block: "start" }); t.classList.add("destello"); setTimeout(function () { t.classList.remove("destello"); }, 1600); }, 60); }
+    } else { window.scrollTo(0, 0); }
+  }
+
+  function montarEducativo(ruta) {
+    document.body.dataset.modo = "educativo";
+    tabbar.hidden = false;
+    contenido.innerHTML = proyectosHTML() + MODULOS.map(vistaModulo).join("") + vistaVerificacion();
+    $$(".formula", contenido).forEach(cablearTarjeta);
+    $$(".caso", contenido).forEach(function (b) { b.addEventListener("click", function () { verificar(b.dataset.caso); }); });
+    verificar("torres");
+    var u = $("#ubicacion");
+    if (u) {
+      u.addEventListener("change", function () {
+        var hsp = parseFloat(u.value);
+        if (isNaN(hsp)) { return; }
+        ["potencia_pico", "produccion_util"].forEach(function (k) {
+          var t = $('.formula[data-formula="' + k + '"]'); fijarValores(t, { hsp: hsp }); recalcular(t);
+        });
+        toast("HSP de " + u.options[u.selectedIndex].text.split(" · ")[0] + " aplicadas.");
+      });
+    }
+    cablearProyectos();
+    var partes = ruta.split("/");
+    mostrarVista(partes[2] || 1, partes[3]);
+  }
+
+  function hubHTML() {
+    var T = PRESETS.torres;
+    return '<section class="inicio">' +
+      '<div class="portada"><p class="portada__lema">Lo que no se puede documentar, no se promete.</p>' +
+      '<p class="portada__texto">Las fórmulas del capítulo 31 de <cite>Energía Solar Advance</cite>, con la operación a la vista y una gráfica que responde a cada dato.</p>' +
+      '<div class="servilleta" aria-label="Caso Torres en una servilleta"><p class="servilleta__titulo">La servilleta de los Torres</p>' +
+      '<ol class="servilleta__pasos">' +
+      "<li><span>220 kWh al mes ÷ 30 ÷ 0,8 ÷ 4,2 HSP</span><b>2.183 Wp</b></li>" +
+      "<li><span>÷ 450 W, hacia arriba</span><b>5 paneles</b></li>" +
+      "<li><span>2.700 USD ÷ (396 − 27)</span><b>7,3 años</b></li>" +
+      "<li><span>cuota 33,4 + factura residual 7</span><b>40,4 USD frente a 40</b></li></ol>" +
+      '<a class="servilleta__enlace" href="#/educativo/verificar">Ver las ' + T.esperados.length + " cifras del caso verificadas" + icono("flecha") + "</a></div></div>" +
+      '<nav class="modos" aria-label="Modos de la calculadora">' +
+      modoHTML("#/educativo/1", "educativo", "Fórmulas del libro", FORMULAS.length + " fórmulas en seis módulos, de la factura al generador, con los casos Torres, La Espiga y Los Alisos.") +
+      modoHTML("#/pro", "pro", "Advance Pro", "Asesor de decisión, simulador antes y después, detective de facturas y herramientas de análisis.") +
+      modoHTML("#/certificado", "certificado", "Certificación", "Examen de 20 preguntas y diploma de Analista de Sistemas Fotovoltaicos.") +
+      "</nav>" +
+      '<p class="inicio__pie">Versión ' + VERSION + " · verificada contra el manuscrito 1.1.0 · funciona sin conexión</p></section>";
+  }
+  function modoHTML(href, ic, titulo, texto) {
+    return '<a class="modo" href="' + href + '"><span class="modo__icono">' + icono(ic) + '</span><span class="modo__texto"><span class="modo__titulo">' + titulo + '</span><span class="modo__descripcion">' + texto + "</span></span>" + icono("flecha") + "</a>";
+  }
+
+  function montarHub() {
+    document.body.dataset.modo = "inicio";
+    tabbar.hidden = true;
+    contenido.innerHTML = hubHTML();
+    window.scrollTo(0, 0);
+  }
+
+  /* ------------------------------------------------------------- Pro */
+  function recalcularPro(t) {
+    var h = HERRAMIENTAS.filter(function (x) { return x.id === t.dataset.pid; })[0];
+    var v = leerValores(t), r = h.calculo(v);
+    var val = $("[data-resultado]", t), uni = $("[data-unidad]", t);
+    if (h.esRango) {
+      val.textContent = r.nmin <= r.nmax ? r.nmin + " a " + r.nmax : "sin ventana";
+      uni.textContent = "módulos en serie";
+      $("[data-operacion]", t).textContent = "Voc frío " + M.es(r.vocFrio, 1) + " V · Vmp caliente " + M.es(r.vmpCalor, 1) + " V";
+    } else {
+      val.textContent = isFinite(r) ? (esMonetaria(h.unidad) ? ctx.m(r, h.decimales || 0).replace(moneda.simbolo + " ", "") : M.es(r, h.decimales || 0)) : "—";
+      uni.textContent = unidadVisible(h.unidad);
+      $("[data-operacion]", t).textContent = h.operacion ? h.operacion(v, r, ctx) : "";
+    }
+    var g = $("[data-grafico]", t);
+    if (h.grafico) {
+      if (!g._vigilado) { window.Graficos.vigilar(g, function () { recalcularPro(t); }); g._vigilado = true; }
+      requestAnimationFrame(function () { window.Graficos.dibujar(g, h.grafico(v, r, ctx), ctx); });
+    } else { g.hidden = true; }
+  }
+
+  function herramientaHTML(h) {
+    return '<article class="formula herramienta" data-pid="' + h.id + '">' +
+      '<header class="formula__cabecera"><div class="formula__titulos"><h3 class="formula__nombre">' + esc(h.nombre) + "</h3>" +
+      '<p class="formula__pregunta">' + esc(h.explicacion) + "</p></div></header>" +
+      '<p class="formula__expresion">' + esc(h.expresion) + "</p>" +
+      '<div class="formula__cuerpo"><div class="formula__entradas">' + h.inputs.map(function (c) { return campoHTML(c); }).join("") + "</div>" +
+      '<div class="formula__salidas"><div class="resultado"><span class="resultado__valor" data-resultado>—</span><span class="resultado__unidad" data-unidad></span></div>' +
+      '<p class="operacion" data-operacion></p><div class="grafico" data-grafico></div></div></div>' +
+      (h.nota ? '<p class="formula__nota">' + esc(h.nota) + "</p>" : "") + "</article>";
+  }
+
+  function montarPro() {
+    document.body.dataset.modo = "pro";
+    tabbar.hidden = true;
+    contenido.innerHTML = volverHTML("#/", "Inicio") +
+      '<header class="vista__cabecera"><h2 class="vista__titulo">Advance Pro</h2><p class="vista__intro">Herramientas para la mesa del cliente y para el análisis técnico.</p></header>' +
+      '<nav class="modos modos--compactos">' +
+      modoHTML("#/asesor", "asesor", "Asesor de decisión", "Tres preguntas y la recomendación del libro: on-grid, híbrido o isla.") +
+      modoHTML("#/simulador", "simulador", "Simulador antes y después", "Facturas acumuladas contra inversión, año a año, con el payback marcado.") +
+      modoHTML("#/detective", "lupa", "Detective de facturas", "Las cinco zonas de la factura y el costo efectivo del kWh.") +
+      "</nav><h3 class=\"seccion\">Herramientas de análisis</h3>" + HERRAMIENTAS.map(herramientaHTML).join("");
+    $$(".herramienta", contenido).forEach(function (t) {
+      cablearCampos(t, function () { recalcularPro(t); });
+      recalcularPro(t);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  function volverHTML(href, texto) { return '<a class="volver" href="' + href + '">' + icono("volver") + texto + "</a>"; }
+
+  function montarVenta(cual) {
+    document.body.dataset.modo = "pro";
+    tabbar.hidden = true;
+    contenido.innerHTML = "";
+    window.Venta[cual](contenido, volverHTML("#/pro", "Advance Pro"), { campoHTML: campoHTML, cablearCampos: cablearCampos, leerValores: leerValores, ctx: ctx, icono: icono });
+    window.scrollTo(0, 0);
+  }
+
+  function montarCertificado() {
+    document.body.dataset.modo = "certificado";
+    tabbar.hidden = true;
+    contenido.innerHTML = "";
+    window.montarCertificado(contenido, volverHTML("#/", "Inicio"));
+    window.scrollTo(0, 0);
+  }
+
+  function montarVerificacionDiploma() {
+    document.body.dataset.modo = "certificado";
+    tabbar.hidden = true;
+    contenido.innerHTML = volverHTML("#/", "Inicio");
+    window.mostrarVerificacion(contenido);
+  }
+
+  /* ------------------------------------------------------------- proyectos */
+  function proyectosHTML() {
+    return '<div class="proyectos"><button class="enlace" id="proy-guardar">' + icono("carpeta") + "Guardar proyecto</button>" +
+      '<button class="enlace" id="proy-abrir" aria-expanded="false">Abrir guardados</button><div id="proy-lista" class="proyectos__lista" hidden></div></div>';
+  }
+
+  function instantanea() {
+    var datos = { version: 2 };
+    $$(".formula[data-formula]").forEach(function (t) { datos[t.dataset.formula] = leerValores(t); });
+    return datos;
+  }
+
+  function restaurar(datos) {
+    Object.keys(datos).forEach(function (id) {
+      var clave = datos.version === 2 ? id : window.MIGRACION_IDS[id];
+      if (!clave) { return; }
+      var t = $('.formula[data-formula="' + clave + '"]');
+      if (!t) { return; }
+      var vals = {};
+      Object.keys(datos[id]).forEach(function (k) {
+        var x = parseFloat(datos[id][k]);
+        if (!isNaN(x)) { vals[k] = datos.version === 2 ? x : x; }
+      });
+      fijarValores(t, vals); recalcular(t);
+    });
+  }
+
+  function cablearProyectos() {
+    if (!window.Almacen) { $(".proyectos").hidden = true; return; }
+    $("#proy-guardar").addEventListener("click", abrirModalProyecto);
+    $("#proy-abrir").addEventListener("click", function () {
+      var lista = $("#proy-lista"), b = $("#proy-abrir");
+      if (!lista.hidden) { lista.hidden = true; b.setAttribute("aria-expanded", "false"); return; }
+      window.Almacen.listar().then(function (proyectos) {
+        lista.hidden = false; b.setAttribute("aria-expanded", "true");
+        if (!proyectos.length) { lista.innerHTML = '<p class="vacio">Aún no hay proyectos. Ajuste las fórmulas y pulse «Guardar proyecto».</p>'; return; }
+        lista.innerHTML = proyectos.slice().reverse().map(function (p) {
+          return '<div class="proyecto"><span class="proyecto__nombre">' + esc(p.nombre) + '<small>' + new Date(p.fecha).toLocaleDateString("es") + "</small></span>" +
+            '<button class="enlace" data-cargar="' + p.id + '">Abrir</button><button class="enlace enlace--peligro" data-borrar="' + p.id + '">Borrar</button></div>';
+        }).join("");
+        $$("[data-cargar]", lista).forEach(function (x) {
+          x.addEventListener("click", function () {
+            var p = proyectos.filter(function (q) { return String(q.id) === x.dataset.cargar; })[0];
+            if (p) { restaurar(p.datos); lista.hidden = true; toast("Proyecto «" + p.nombre + "» abierto."); }
+          });
+        });
+        $$("[data-borrar]", lista).forEach(function (x) {
+          x.addEventListener("click", function () {
+            window.Almacen.borrar(parseInt(x.dataset.borrar, 10)).then(function () { x.closest(".proyecto").remove(); toast("Proyecto borrado."); });
+          });
+        });
+      }).catch(function () { toast("Este navegador no permite guardar proyectos."); });
+    });
+  }
 
   function abrirModalProyecto() {
-    if (!modalProyectoListo) {
-      var modal = document.getElementById("modal-proyecto");
-      var nombreInput = document.getElementById("proyecto-nombre");
-      document.getElementById("proyecto-cancelar").addEventListener("click", function () {
-        modal.classList.remove("visible");
+    var modal = $("#modal-proyecto"), entrada = $("#proyecto-nombre");
+    if (!modal._listo) {
+      $("#proyecto-cancelar").addEventListener("click", function () { modal.classList.remove("visible"); });
+      entrada.addEventListener("keydown", function (e) { if (e.key === "Enter") { $("#proyecto-confirmar").click(); } if (e.key === "Escape") { modal.classList.remove("visible"); } });
+      $("#proyecto-confirmar").addEventListener("click", function () {
+        var nombre = entrada.value.trim();
+        if (!nombre) { entrada.focus(); return; }
+        window.Almacen.guardar(nombre, instantanea()).then(function () { modal.classList.remove("visible"); toast("Proyecto «" + nombre + "» guardado."); })
+          .catch(function () { toast("No se pudo guardar: el navegador bloquea el almacenamiento."); });
       });
-      document.getElementById("proyecto-nombre").addEventListener("keydown", function (e) {
-        if (e.key === "Enter") { document.getElementById("proyecto-confirmar").click(); }
-      });
-      document.getElementById("proyecto-confirmar").addEventListener("click", function () {
-        var nombre = nombreInput.value.trim();
-        if (!nombre) { nombreInput.focus(); return; }
-        window.Almacen.guardar(nombre, window.Almacen.snapshot()).then(function () {
-          modal.classList.remove("visible");
-          toast("Proyecto guardado.");
-        }).catch(function () { toast("No se pudo guardar el proyecto."); });
-      });
-      modalProyectoListo = true;
+      modal._listo = true;
     }
-    var nombreInput = document.getElementById("proyecto-nombre");
-    nombreInput.value = "";
-    document.getElementById("modal-proyecto").classList.add("visible");
-    setTimeout(function () { nombreInput.focus(); }, 60);
+    entrada.value = "";
+    modal.classList.add("visible");
+    setTimeout(function () { entrada.focus(); }, 60);
   }
 
-  function montarProyectos() {
-    var bar = document.createElement("div");
-    bar.className = "tarjeta";
-    bar.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;align-items:center";
-    bar.innerHTML =
-      '<div class="tarjeta__cabecera" style="width:100%"><span class="tarjeta__indice">P</span>' +
-      '<span class="tarjeta__nombre">Tus proyectos</span>' +
-      '<button class="tarjeta__ayuda" id="proy-ayuda" type="button" aria-label="Qué es guardar proyecto">?</button></div>' +
-      '<div class="tarjeta__explicacion" id="proy-explicacion">' +
-      'Guarda una instantánea de todos los valores que has ingresado (fórmulas y herramientas) en este dispositivo. ' +
-      'Así no los pierdes al cerrar la app y puedes retomarlos después con «Abrir». No sale de tu teléfono: funciona sin cuenta y sin nube.</div>' +
-      '<button class="boton" id="proy-guardar" style="flex:1;min-width:120px">Guardar proyecto</button>' +
-      '<button class="boton boton--secundario" id="proy-abrir" style="flex:1;min-width:120px">Abrir</button>' +
-      '<div id="proy-lista" style="width:100%"></div>';
-    contenido.insertBefore(bar, contenido.firstChild);
-
-    document.getElementById("proy-ayuda").addEventListener("click", function () {
-      document.getElementById("proy-explicacion").classList.toggle("visible");
-    });
-    document.getElementById("proy-guardar").addEventListener("click", abrirModalProyecto);
-
-    document.getElementById("proy-abrir").addEventListener("click", function () {
-      var lista = document.getElementById("proy-lista");
-      if (lista.childElementCount) { lista.innerHTML = ""; return; }
-      window.Almacen.listar().then(function (proyectos) {
-        if (!proyectos.length) { lista.innerHTML = '<p class="nota">No hay proyectos guardados.</p>'; return; }
-        lista.innerHTML = proyectos.map(function (p) {
-          return '<div class="fila-verificacion"><span class="fila-verificacion__concepto">' + p.nombre + '</span>' +
-            '<span><button class="boton boton--secundario" data-cargar="' + p.id + '">abrir</button> ' +
-            '<button class="boton boton--secundario" data-borrar="' + p.id + '">borrar</button></span></div>';
-        }).join("");
-        lista.querySelectorAll("[data-cargar]").forEach(function (b) {
-          b.addEventListener("click", function () {
-            var p = proyectos.find(function (x) { return String(x.id) === b.dataset.cargar; });
-            if (p) { window.Almacen.restaurar(p.datos); recalcularTodo(); lista.innerHTML = ""; }
-          });
-        });
-        lista.querySelectorAll("[data-borrar]").forEach(function (b) {
-          b.addEventListener("click", function () {
-            window.Almacen.borrar(parseInt(b.dataset.borrar, 10)).then(function () {
-              b.closest(".fila-verificacion").remove();
-            });
-          });
-        });
-      });
-    });
-  }
-
-  function mostrarCertificado() {
-    tabbar.style.display = "none";
-    contenido.innerHTML = "";
-    if (window.montarCertificado) { window.montarCertificado(contenido); }
-  }
-
-  function mostrarVerificacion() {
-    tabbar.style.display = "none";
-    contenido.innerHTML = botonVolver();
-    document.getElementById("boton-volver").addEventListener("click", function () { enrutar("#/"); });
-    if (window.mostrarVerificacion) { window.mostrarVerificacion(contenido); }
-  }
-
-  function mostrarAsesor() {
-    tabbar.style.display = "none";
-    contenido.innerHTML = "";
-    if (window.Venta) { window.Venta.asesor(contenido, function () { enrutar("#/pro"); }); }
-  }
-  function mostrarSimulador() {
-    tabbar.style.display = "none";
-    contenido.innerHTML = "";
-    if (window.Venta) { window.Venta.simulador(contenido, function () { enrutar("#/pro"); }); }
-  }
-  function mostrarDetective() {
-    tabbar.style.display = "none";
-    contenido.innerHTML = "";
-    if (window.Venta) { window.Venta.detective(contenido, function () { enrutar("#/pro"); }); }
-  }
-
-  window.mostrarHub = function () { enrutar("#/"); };
-
-  function enrutar(ruta) {
-    var hash = ruta || location.hash || "#/";
-    if (hash.indexOf("#/verificar") === 0) { mostrarVerificacion(); }
-    else if (hash.indexOf("#/educativo") === 0) { mostrarEducativo(); }
-    else if (hash.indexOf("#/pro") === 0) { mostrarPro(); }
-    else if (hash.indexOf("#/certificado") === 0) { mostrarCertificado(); }
-    else if (hash.indexOf("#/asesor") === 0) { mostrarAsesor(); }
-    else if (hash.indexOf("#/simulador") === 0) { mostrarSimulador(); }
-    else if (hash.indexOf("#/detective") === 0) { mostrarDetective(); }
-    else { mostrarHub(); }
-  }
-  window.addEventListener("hashchange", function () { enrutar(); });
-
-  function montarSelectorMoneda() {
-    var boton = document.getElementById("moneda-select");
-    var banderaEl = document.getElementById("moneda-bandera");
-    var textoEl = document.getElementById("moneda-texto");
-    var lista = document.getElementById("moneda-lista");
-    var tasa = document.getElementById("moneda-tasa");
-    var indiceMoneda = 0;
-
-    function etiquetaMoneda(m) {
-      return m.codigo === "USD" && m.pais !== "Estados Unidos (referencia)" ? m.pais + " · USD" : m.pais + " · " + m.codigo;
+  /* ------------------------------------------------------------- rutas */
+  function enrutar() {
+    var h = location.hash || "#/";
+    if (h.indexOf("#/verificar") === 0) { montarVerificacionDiploma(); }
+    else if (h.indexOf("#/educativo") === 0) {
+      var partes = h.replace("#", "").split("/");
+      if (document.body.dataset.modo === "educativo" && $(".vista")) { mostrarVista(partes[2] || 1, partes[3]); }
+      else { montarEducativo(h.replace("#", "")); }
     }
-
-    lista.innerHTML = MONEDAS.map(function (m, i) {
-      return '<button class="moneda__opcion" role="option" data-indice="' + i + '">' +
-        '<span class="moneda__bandera">' + (window.banderaSVG ? window.banderaSVG(m.pais) : "") + '</span>' +
-        '<span class="moneda__opcion__texto">' + etiquetaMoneda(m) + '</span></button>';
-    }).join("");
-
-    // Restaurar la moneda recordada
-    var guardado = null;
-    try { guardado = localStorage.getItem("advance:moneda"); } catch (e) {}
-    if (guardado !== null && guardado !== undefined) {
-      var g = parseInt(guardado, 10);
-      if (!isNaN(g) && g >= 0 && g < MONEDAS.length) { indiceMoneda = g; }
-    }
-
-    function pintarBoton() {
-      var m = MONEDAS[indiceMoneda] || MONEDAS[0];
-      banderaEl.innerHTML = window.banderaSVG ? window.banderaSVG(m.pais) : "";
-      textoEl.textContent = etiquetaMoneda(m);
-      lista.querySelectorAll(".moneda__opcion").forEach(function (o) {
-        o.classList.toggle("activo", o.dataset.indice === String(indiceMoneda));
-      });
-    }
-
-    function abrirLista() { lista.classList.add("visible"); boton.setAttribute("aria-expanded", "true"); }
-    function cerrarLista() { lista.classList.remove("visible"); boton.setAttribute("aria-expanded", "false"); }
-
-    boton.addEventListener("click", function () {
-      if (lista.classList.contains("visible")) { cerrarLista(); } else { abrirLista(); }
-    });
-    lista.querySelectorAll(".moneda__opcion").forEach(function (opcion) {
-      opcion.addEventListener("click", function () {
-        var nuevo = parseInt(opcion.dataset.indice, 10);
-        var convertir = nuevo !== indiceMoneda;
-        indiceMoneda = nuevo;
-        aplicarMoneda(convertir);
-        cerrarLista();
-        pintarBoton();
-        try { localStorage.setItem("advance:moneda", String(indiceMoneda)); } catch (e) {}
-      });
-    });
-    document.addEventListener("click", function (e) {
-      if (!document.getElementById("moneda-selector").contains(e.target)) { cerrarLista(); }
-    });
-
-    function convertirValoresMonetarios(anteriorTasa, nuevaTasa) {
-      document.querySelectorAll("input[data-monetario]").forEach(function (entrada) {
-        var v = parseFloat(entrada.value);
-        if (!isNaN(v)) { entrada.value = v / anteriorTasa * nuevaTasa; }
-      });
-    }
-    function actualizarEtiquetasMonetarias() {
-      document.querySelectorAll("[data-campo-unidad]").forEach(function (span) {
-        span.textContent = unidadEtiqueta(span.getAttribute("data-campo-unidad"));
-      });
-    }
-    function aplicarMoneda(convertir) {
-      var anterior = moneda;
-      moneda = MONEDAS[indiceMoneda] || MONEDAS[0];
-      var esDolar = moneda.codigo === "USD";
-      tasa.hidden = esDolar;
-      if (!esDolar) { tasa.value = moneda.tasa; }
-      if (convertir) { convertirValoresMonetarios(anterior.tasa, moneda.tasa); }
-      actualizarEtiquetasMonetarias();
-      recalcularTodo();
-    }
-
-    tasa.addEventListener("input", function () {
-      var v = parseFloat(tasa.value);
-      if (!isNaN(v) && v > 0) { moneda.tasa = v; }
-      recalcularTodo();
-    });
-
-    aplicarMoneda(false);
-    pintarBoton();
+    else if (h.indexOf("#/pro") === 0) { montarPro(); }
+    else if (h.indexOf("#/certificado") === 0) { montarCertificado(); }
+    else if (h.indexOf("#/asesor") === 0) { montarVenta("asesor"); }
+    else if (h.indexOf("#/simulador") === 0) { montarVenta("simulador"); }
+    else if (h.indexOf("#/detective") === 0) { montarVenta("detective"); }
+    else { montarHub(); }
   }
+  window.addEventListener("hashchange", enrutar);
+  window.mostrarHub = function () { location.hash = "#/"; };
 
   function montarTabbar() {
-    tabbar.innerHTML = "";
-    MODULOS.forEach(function (m) {
-      tabbar.insertAdjacentHTML("beforeend", '<button class="tab" data-tab="' + m.id + '">' + icono(m.icono) + '<span>' + m.nombre + '</span></button>');
-    });
-    tabbar.insertAdjacentHTML("beforeend", '<button class="tab" data-tab="verificacion">' + icono("verificar") + '<span>Verificar</span></button>');
+    tabbar.innerHTML = MODULOS.map(function (m) {
+      return '<a class="tab" href="#/educativo/' + m.id + '" data-tab="' + m.id + '">' + icono(m.icono) + "<span>" + m.nombre + "</span></a>";
+    }).join("") + '<a class="tab" href="#/educativo/verificar" data-tab="verificar">' + icono("verificar") + "<span>Verificar</span></a>";
   }
 
+  /* ------------------------------------------------------------- selector de moneda */
+  function montarMoneda() {
+    var boton = $("#moneda-select"), lista = $("#moneda-lista"), tasa = $("#moneda-tasa");
+    var indice = 0;
+    try { var g = parseInt(localStorage.getItem("advance:moneda"), 10); if (!isNaN(g) && MONEDAS[g]) { indice = g; } } catch (e) {}
+    try { var tg = JSON.parse(localStorage.getItem("advance:tasas") || "{}"); MONEDAS.forEach(function (m) { if (tg[m.codigo]) { m.tasa = tg[m.codigo]; } }); } catch (e) {}
+    function etiqueta(m) { return (m.pais === "Estados Unidos (referencia)" ? "Dólar de referencia" : m.pais) + " · " + m.codigo; }
+    lista.innerHTML = MONEDAS.map(function (m, i) {
+      return '<button class="moneda__opcion" role="option" data-indice="' + i + '"><span class="moneda__bandera">' + (window.banderaSVG ? window.banderaSVG(m.pais) : "") + "</span>" + esc(etiqueta(m)) + "</button>";
+    }).join("");
+    function pintar() {
+      var m = MONEDAS[indice];
+      $("#moneda-bandera").innerHTML = window.banderaSVG ? window.banderaSVG(m.pais) : "";
+      $("#moneda-texto").textContent = m.codigo;
+      $$(".moneda__opcion", lista).forEach(function (o) { o.setAttribute("aria-selected", o.dataset.indice === String(indice) ? "true" : "false"); });
+      tasa.hidden = m.codigo === "USD";
+      tasa.value = m.tasa;
+      $("#moneda-tasa-etiqueta").hidden = m.codigo === "USD";
+    }
+    function cerrar() { lista.classList.remove("visible"); boton.setAttribute("aria-expanded", "false"); }
+    boton.addEventListener("click", function (e) { e.stopPropagation(); var abierta = lista.classList.toggle("visible"); boton.setAttribute("aria-expanded", abierta ? "true" : "false"); });
+    document.addEventListener("click", function (e) { if (!$("#moneda-selector").contains(e.target)) { cerrar(); } });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") { cerrar(); } });
+    function convertirEntradas(anterior, nueva) {
+      $$("input[data-monetario]").forEach(function (e) {
+        var v = parseFloat(e.value);
+        if (!isNaN(v)) { e.value = Number((v / anterior * nueva).toPrecision(8)); }
+        var r = $(".campo__rango", e.closest(".campo"));
+        if (r) { r.min = r.min / anterior * nueva; r.max = r.max / anterior * nueva; r.value = e.value; }
+        e.dataset.dec = nueva >= 100 ? 0 : 2;
+      });
+      $$("[data-unidad-base]").forEach(function (s) { s.textContent = unidadVisible(s.dataset.unidadBase); });
+    }
+    $$(".moneda__opcion", lista).forEach(function (o) {
+      o.addEventListener("click", function () {
+        var anterior = moneda.tasa;
+        indice = parseInt(o.dataset.indice, 10); moneda = MONEDAS[indice];
+        convertirEntradas(anterior, moneda.tasa);
+        try { localStorage.setItem("advance:moneda", String(indice)); } catch (e) {}
+        pintar(); cerrar(); recalcularTodo();
+        toast(moneda.codigo === "USD" ? "Valores en dólares." : "Valores en " + moneda.codigo + " a una tasa orientativa de " + M.es(moneda.tasa, 2) + " por dólar. Puede editarla.");
+      });
+    });
+    tasa.addEventListener("change", function () {
+      var v = parseFloat(tasa.value);
+      if (isNaN(v) || v <= 0) { tasa.value = moneda.tasa; return; }
+      var anterior = moneda.tasa; moneda.tasa = v;
+      convertirEntradas(anterior, v);
+      try { var tg = JSON.parse(localStorage.getItem("advance:tasas") || "{}"); tg[moneda.codigo] = v; localStorage.setItem("advance:tasas", JSON.stringify(tg)); } catch (e) {}
+      recalcularTodo();
+    });
+    moneda = MONEDAS[indice];
+    pintar();
+  }
+
+  /* ------------------------------------------------------------- tema */
+  function montarTema() {
+    var raiz = document.documentElement, boton = $("#boton-tema");
+    function aplicar(t) {
+      if (t) { raiz.dataset.theme = t; } else { delete raiz.dataset.theme; }
+      var oscuro = t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      boton.setAttribute("aria-pressed", oscuro ? "true" : "false");
+      $('meta[name="theme-color"]').setAttribute("content", oscuro ? "#0B1D30" : "#0F2B48");
+    }
+    var guardado = null;
+    try { guardado = localStorage.getItem("advance:tema"); } catch (e) {}
+    aplicar(guardado === "oscuro" ? "dark" : guardado === "claro" ? "light" : null);
+    boton.addEventListener("click", function () {
+      var oscuro = boton.getAttribute("aria-pressed") !== "true";
+      aplicar(oscuro ? "dark" : "light");
+      try { localStorage.setItem("advance:tema", oscuro ? "oscuro" : "claro"); } catch (e) {}
+      recalcularTodo();
+    });
+  }
+
+  /* ------------------------------------------------------------- instalación */
   var promptInstalacion = null;
-  function esIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
   function enStandalone() { return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true; }
-  function gestionarInstalacion() {
+  function esIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent); }
+  function ofrecerInstalacion() {
     if (enStandalone()) { return; }
-    if (esIOS()) { document.getElementById("superposicion-ios").classList.add("visible"); return; }
-    document.getElementById("superposicion-instalar").classList.add("visible");
+    var ultima = 0;
+    try { ultima = parseInt(localStorage.getItem("advance:instalar") || "0", 10); } catch (e) {}
+    if (Date.now() - ultima < 7 * 864e5) { return; }
+    var hoja = $("#hoja-instalar");
+    $("#instalar-texto").innerHTML = esIOS()
+      ? "En Safari, toque <strong>Compartir</strong> y luego <strong>Agregar a pantalla de inicio</strong>. La calculadora queda en su teléfono y funciona sin conexión."
+      : "Quedará en su pantalla de inicio y funcionará sin conexión, también en la visita al cliente.";
+    $("#boton-instalar").hidden = esIOS();
+    hoja.classList.add("visible");
   }
   window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); promptInstalacion = e; });
 
+  /* ------------------------------------------------------------- arranque */
   function iniciar() {
-    contenido = document.getElementById("contenido");
-    tabbar = document.getElementById("tabbar");
-    montarTabbar();
-    montarSelectorMoneda();
+    contenido = $("#contenido"); tabbar = $("#tabbar");
+    montarTabbar(); montarTema(); montarMoneda();
     enrutar();
-    // Modo oscuro (persistido)
-    function aplicarTema(oscuro) {
-      document.body.classList.toggle("oscuro", oscuro);
-      try { localStorage.setItem("advance:tema", oscuro ? "oscuro" : "claro"); } catch (e) {}
-    }
-    try { aplicarTema(localStorage.getItem("advance:tema") === "oscuro"); } catch (e) {}
-    document.getElementById("boton-tema").addEventListener("click", function () {
-      aplicarTema(!document.body.classList.contains("oscuro"));
-    });
-    document.getElementById("boton-casa").addEventListener("click", function () { enrutar("#/"); });
-    document.getElementById("boton-instalar").addEventListener("click", function () {
+    $("#boton-instalar").addEventListener("click", function () {
       if (promptInstalacion) {
         promptInstalacion.prompt();
-        promptInstalacion.userChoice.then(function () {
-          document.getElementById("superposicion-instalar").classList.remove("visible");
-        });
-      } else { window.alert("Usa Chrome o Edge para instalar la app."); }
+        promptInstalacion.userChoice.then(function () { $("#hoja-instalar").classList.remove("visible"); });
+      } else { toast("Abra la calculadora en Chrome, Edge o Safari para instalarla."); }
     });
-    document.getElementById("boton-continuar-web").addEventListener("click", function () {
-      document.getElementById("superposicion-instalar").classList.remove("visible");
+    $("#boton-ahora-no").addEventListener("click", function () {
+      $("#hoja-instalar").classList.remove("visible");
+      try { localStorage.setItem("advance:instalar", String(Date.now())); } catch (e) {}
     });
-    document.getElementById("boton-cerrar-ios").addEventListener("click", function () {
-      document.getElementById("superposicion-ios").classList.remove("visible");
-    });
-    gestionarInstalacion();
+    setTimeout(ofrecerInstalacion, 2500);
   }
 
   document.addEventListener("DOMContentLoaded", iniciar);
-  if ("serviceWorker" in navigator) { navigator.serviceWorker.register("./service-worker.js"); }
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    var habiaControlador = !!navigator.serviceWorker.controller;   // primera visita: sin aviso
+    navigator.serviceWorker.register("./service-worker.js").then(function (reg) {
+      reg.addEventListener("updatefound", function () {
+        var nuevo = reg.installing;
+        if (!nuevo) { return; }
+        nuevo.addEventListener("statechange", function () {
+          if (nuevo.state === "activated" && habiaControlador) { toast("Calculadora actualizada a la última versión."); }
+        });
+      });
+    }).catch(function () {});
+  }
 })();
